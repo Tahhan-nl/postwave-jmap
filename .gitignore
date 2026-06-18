@@ -1,0 +1,25 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node / Build tools
+node_modules/
+package-lock.json
+yarn.lock
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+
+# Plugin zip builds
+*.zip
+
+# Composer
+vendor/
+composer.lock
