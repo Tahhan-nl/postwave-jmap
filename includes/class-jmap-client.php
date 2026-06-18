@@ -3,7 +3,7 @@
  * Postwave JMAP Client — session discovery, API requests, blob uploads.
  *
  * @package Postwave
- * @license AGPL-3.0-or-later
+ * @license GPL-2.0-or-later
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

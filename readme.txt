@@ -16,7 +16,7 @@ Send WordPress emails via JMAP — the modern RFC 8620/8621 mail protocol. No SM
 
 Most WordPress sites send email through SMTP — a protocol designed in 1982 that requires open firewall ports, relay credentials, and third-party services that rate-limit or charge per message.
 
-Postwave takes a different approach. JMAP runs over standard HTTPS, needs no special ports, works behind firewalls, and is natively supported by modern mail servers.
+Postwave JMAP takes a different approach. JMAP runs over standard HTTPS, needs no special ports, works behind firewalls, and is natively supported by modern mail servers.
 
 = How it works =
 
@@ -54,7 +54,7 @@ Every step is logged with status, recipient, subject, and JMAP IDs — message b
 
 = Privacy =
 
-Postwave stores per send attempt: timestamp, recipient address, subject, status, JMAP object IDs, and error message if failed. **Message bodies, attachment contents, and passwords are never stored in the log.**
+Postwave JMAP stores per send attempt: timestamp, recipient address, subject, status, JMAP object IDs, and error message if failed. **Message bodies, attachment contents, and passwords are never stored in the log.**
 
 == Installation ==
 
@@ -100,7 +100,7 @@ After activation, **Postwave JMAP** appears as its own item in the WordPress adm
 
 Your password is stored in `wp_options` using WordPress's standard option storage. It is never written to log files or transmitted anywhere other than to your configured JMAP server over HTTPS.
 
-= Why is Postwave better than SMTP plugins? =
+= Why is Postwave JMAP better than SMTP plugins? =
 
 SMTP requires an open port (25, 465, or 587), which many hosting providers block. JMAP uses standard HTTPS (port 443) which is always available. JMAP is also stateless, supports batch requests, and has a cleaner API.
 
@@ -110,15 +110,15 @@ Yes — the **Mail Log** tab shows the last 100 send attempts including status, 
 
 = What happens if a send fails? =
 
-Postwave logs the failure with the error message and fires WordPress's standard `wp_mail_failed` action, so other plugins can react to it.
+Postwave JMAP logs the failure with the error message and fires WordPress's standard `wp_mail_failed` action, so other plugins can react to it.
 
 = Will this slow down my site? =
 
-Postwave only makes an HTTP request when an email is actually being sent. It does not add any overhead to regular page loads.
+Postwave JMAP only makes an HTTP request when an email is actually being sent. It does not add any overhead to regular page loads.
 
 == Screenshots ==
 
-1. **General tab** — toggle Postwave on/off and configure sender name and email address
+1. **General tab** — toggle Postwave JMAP on/off and configure sender name and email address
 2. **Connection tab** — enter your JMAP server URL and credentials
 3. **Live connection test** — verify the session, sender identity, and server capabilities
 4. **Mail Log** — expandable entries showing status, JMAP IDs, and error details

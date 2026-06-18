@@ -43,7 +43,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
     <div id="pw-ws0">
       <div class="pw-hero">
         <?php echo $logo; ?>
-        <h1>Welcome to Postwave</h1>
+        <h1>Welcome to Postwave JMAP</h1>
         <p>Modern JMAP mail for WordPress — no SMTP, no ports, no hassle.</p>
       </div>
       <ul class="pw-feats">
@@ -171,13 +171,13 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
         <!-- Step 3: Activate -->
         <div id="pw-ws3" class="pw-wstep" style="display:none">
           <div class="pw-wstep-head">
-            <h2><?php esc_html_e( 'Activate Postwave', 'postwave' ); ?></h2>
+            <h2><?php esc_html_e( 'Activate Postwave JMAP', 'postwave' ); ?></h2>
             <p><?php esc_html_e( 'Enable the plugin to route all WordPress emails through JMAP.', 'postwave' ); ?></p>
           </div>
           <input type="hidden" name="postwave[enabled]" value="0">
           <div class="pw-toggle-row">
             <div class="pw-toggle-info">
-              <strong><?php esc_html_e( 'Enable Postwave', 'postwave' ); ?></strong>
+              <strong><?php esc_html_e( 'Enable Postwave JMAP', 'postwave' ); ?></strong>
               <span><?php esc_html_e( 'Intercept all wp_mail() calls and send via JMAP', 'postwave' ); ?></span>
             </div>
             <label class="pw-toggle">
@@ -210,7 +210,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
   $tab_meta = [
     'general'    => [
       'label' => __( 'General', 'postwave' ),
-      'desc'  => __( 'Enable Postwave and configure sender information.', 'postwave' ),
+      'desc'  => __( 'Enable Postwave JMAP and configure sender information.', 'postwave' ),
       'icon'  => $icon_general,
     ],
     'connection' => [
@@ -328,7 +328,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
             <input type="hidden" name="postwave[enabled]" value="0">
             <div class="pw-toggle-row">
               <div class="pw-toggle-info">
-                <strong><?php esc_html_e( 'Enable Postwave', 'postwave' ); ?></strong>
+                <strong><?php esc_html_e( 'Enable Postwave JMAP', 'postwave' ); ?></strong>
                 <span><?php esc_html_e( 'Route all WordPress emails through your JMAP server', 'postwave' ); ?></span>
               </div>
               <label class="pw-toggle">

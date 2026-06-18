@@ -3,7 +3,7 @@
  * Postwave Mailer — intercepts wp_mail() and sends via JMAP.
  *
  * @package Postwave
- * @license AGPL-3.0-or-later
+ * @license GPL-2.0-or-later
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

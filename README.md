@@ -1,33 +1,33 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Tahhan-nl/postwave/main/assets/img/banner.png" alt="Postwave Banner" width="100%">
+<img src="https://raw.githubusercontent.com/Tahhan-nl/postwave-jmap/main/assets/img/banner-1544x500.png" alt="Postwave JMAP Banner" width="100%">
 
-# Postwave
+# Postwave JMAP
 
 ### Modern JMAP Mail for WordPress
 
 **Send every WordPress email through a real mail server — no SMTP ports, no relay limits, no deliverability headaches.**  
-Postwave replaces WordPress's built-in mailer with the modern [JMAP protocol](https://jmap.io/) (RFC 8620 / RFC 8621).
+Postwave JMAP replaces WordPress's built-in mailer with the modern [JMAP protocol](https://jmap.io/) (RFC 8620 / RFC 8621).
 
 ---
 
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue?logo=wordpress&logoColor=white)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?logo=php&logoColor=white)](https://php.net/)
-[![License](https://img.shields.io/badge/License-AGPL%203.0-green.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Version](https://img.shields.io/badge/Version-1.0.0-indigo)](https://github.com/Tahhan-nl/postwave/releases)
+[![License](https://img.shields.io/badge/License-GPL%202.0-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
+[![Version](https://img.shields.io/badge/Version-1.0.0-6366f1)](https://github.com/Tahhan-nl/postwave-jmap/releases)
 [![Tested up to](https://img.shields.io/badge/Tested%20up%20to-WP%206.7-success)](https://wordpress.org/)
 
 </div>
 
 ---
 
-## What is Postwave?
+## What is Postwave JMAP?
 
 Most WordPress sites send email through SMTP — a protocol designed in 1982. It requires open ports, relay credentials, and third-party services that rate-limit you or charge per email.
 
-**Postwave** takes a different approach: it uses **JMAP** (JSON Meta Application Protocol), the modern RFC-standard replacement for IMAP/SMTP. JMAP talks over standard HTTPS, works through firewalls, requires no port configuration, and is supported by modern mail servers like [Stalwart Mail Server](https://stalw.art), [Fastmail](https://fastmail.com), and [Cyrus IMAP](https://www.cyrusimap.org/).
+**Postwave JMAP** takes a different approach: it uses **JMAP** (JSON Meta Application Protocol), the modern RFC-standard replacement for IMAP/SMTP. JMAP talks over standard HTTPS, works through firewalls, requires no port configuration, and is supported by modern mail servers like [Stalwart Mail Server](https://stalw.art), [Fastmail](https://fastmail.com), and [Cyrus IMAP](https://www.cyrusimap.org/).
 
-> **TL;DR** — Install Postwave, enter your JMAP server URL + credentials, and every `wp_mail()` call on your site is delivered through your own mail infrastructure.
+> **TL;DR** — Install Postwave JMAP, enter your JMAP server URL + credentials, and every `wp_mail()` call on your site is delivered through your own mail infrastructure.
 
 ---
 
@@ -49,8 +49,6 @@ Most WordPress sites send email through SMTP — a protocol designed in 1982. It
 
 ## Screenshots
 
-> Screenshots will be added upon WordPress.org submission.
-
 | General Settings | Connection Testing | Mail Log |
 |---|---|---|
 | Toggle enable/disable, configure sender name & email | Live JMAP session test with step-by-step feedback | Expandable log entries with JMAP IDs and error details |
@@ -68,7 +66,7 @@ Most WordPress sites send email through SMTP — a protocol designed in 1982. It
 ## Installation
 
 ### From WordPress Admin (recommended)
-1. Download the [latest release](https://github.com/Tahhan-nl/postwave/releases) ZIP
+1. Download the [latest release](https://github.com/Tahhan-nl/postwave-jmap/releases) ZIP
 2. Go to **Plugins → Add New → Upload Plugin**
 3. Upload the ZIP and click **Install Now**
 4. Click **Activate**
@@ -76,18 +74,18 @@ Most WordPress sites send email through SMTP — a protocol designed in 1982. It
 ### Manually via FTP
 1. Download and unzip the release
 2. Upload the `postwave/` folder to `/wp-content/plugins/`
-3. Go to **Plugins** in WordPress admin and activate **Postwave**
+3. Go to **Plugins** in WordPress admin and activate **Postwave JMAP**
 
 ### Via WP-CLI
 ```bash
-wp plugin install https://github.com/Tahhan-nl/postwave/releases/latest/download/postwave.zip --activate
+wp plugin install https://github.com/Tahhan-nl/postwave-jmap/releases/latest/download/postwave.zip --activate
 ```
 
 ---
 
 ## Configuration
 
-After activation, Postwave shows a **setup wizard** if no server is configured yet.
+After activation, Postwave JMAP shows a **setup wizard** if no server is configured yet.
 
 ### Step 1 — Server
 Enter your JMAP server base URL (e.g. `https://mail.example.com`).  
@@ -99,11 +97,11 @@ Set the **From Name** and **From Email** address for outgoing mail.
 Optionally add a **Test Recipient** for the "Send Test Email" button.
 
 ### Step 3 — Activate
-Toggle **Enable Postwave** to start routing all WordPress mail through JMAP.
+Toggle **Enable Postwave JMAP** to start routing all WordPress mail through JMAP.
 
 ### Testing the connection
-Go to **Postwave → Connection** and click **Test connection**.  
-Postwave will:
+Go to **Postwave JMAP → Connection** and click **Test connection**.  
+Postwave JMAP will:
 1. Discover the JMAP session
 2. Resolve the sender identity
 3. Verify server capabilities
@@ -131,7 +129,7 @@ Click **Send test email** to fire a real email through the full send pipeline.
 WordPress calls wp_mail()
         │
         ▼
-Postwave hooks pre_wp_mail
+Postwave JMAP hooks pre_wp_mail
         │
         ├─ Discovers JMAP session (/.well-known/jmap)
         ├─ Resolves sender identity (Identity/get)
@@ -161,6 +159,7 @@ Postwave hooks pre_wp_mail
 - [x] Professional admin UI with setup wizard
 - [x] Live connection testing (AJAX)
 - [x] PHP 7.4 compatibility
+- [x] WordPress.org submission assets
 
 ---
 
@@ -186,13 +185,12 @@ Postwave hooks pre_wp_mail
 - [ ] **Transactional email templates** — beautiful HTML email templates built in
 - [ ] **Bounce handling** — parse delivery failure reports, mark addresses as bounced
 - [ ] **Suppression list** — never send to bounced or unsubscribed addresses
-- [ ] **WordPress.org plugin directory** — official listing
 
 ---
 
 ## Privacy
 
-Postwave stores the following per email attempt in `wp_options`:
+Postwave JMAP stores the following per email attempt in `wp_options`:
 - Timestamp
 - Recipient address(es)
 - Subject line
@@ -201,7 +199,7 @@ Postwave stores the following per email attempt in `wp_options`:
 - Error message (if failed)
 
 **Message bodies, CC/BCC addresses, and attachment contents are never stored.**  
-The log is capped at 100 entries. You can clear it at any time from **Postwave → Mail Log**.
+The log is capped at 100 entries. You can clear it at any time from **Postwave JMAP → Mail Log**.
 
 ---
 
@@ -226,7 +224,7 @@ add_filter( 'postwave_request_args', function( $args, $method ) {
 }, 10, 2 );
 ```
 
-### Bypass Postwave for a single send
+### Bypass Postwave JMAP for a single send
 
 ```php
 remove_filter( 'pre_wp_mail', [ Postwave_Mailer::class, 'send' ], 10 );
@@ -248,21 +246,21 @@ Please follow [WordPress Coding Standards](https://developer.wordpress.org/codin
 
 ## Security
 
-Found a vulnerability? Please report it privately via [GitHub Security Advisories](https://github.com/Tahhan-nl/postwave/security/advisories/new) — do **not** open a public issue.
+Found a vulnerability? Please report it privately via [GitHub Security Advisories](https://github.com/Tahhan-nl/postwave-jmap/security/advisories/new) — do **not** open a public issue.
 
 ---
 
 ## License
 
-Postwave is open-source software licensed under the [GNU Affero General Public License v3.0](LICENSE).
+Postwave JMAP is open-source software licensed under the [GNU General Public License v2.0](LICENSE).
 
 ```
-Postwave — JMAP Mail for WordPress
+Postwave JMAP — JMAP Mail for WordPress
 Copyright (C) 2026 Tahhan.nl
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
 (at your option) any later version.
 ```
 
