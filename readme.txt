@@ -3,7 +3,7 @@ Contributors: tahhan
 Tags: email, mail, jmap, smtp, transactional-email
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,12 @@ Postwave JMAP only makes an HTTP request when an email is actually being sent. I
 5. **Setup wizard** — guided 3-step onboarding for new installs
 
 == Changelog ==
+
+= 1.1.0 =
+* New: Automatic retry queue — failed emails re-sent via WP-Cron with exponential backoff
+* New: Multiple sending identities — choose a JMAP identity from your server in Connection settings
+* New: Mail log CSV export — download the full log from the Mail Log tab
+* New: Email open tracking — opt-in pixel tracking, fully self-hosted, privacy-first
 
 = 1.0.0 =
 * Initial release

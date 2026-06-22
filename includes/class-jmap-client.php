@@ -353,6 +353,43 @@ class Postwave_JMAP_Client {
 		);
 	}
 
+	/**
+	 * Fetch all sending identities from the JMAP server, with caching.
+	 *
+	 * @return array|WP_Error Array of identity objects or WP_Error.
+	 */
+	public function get_all_identities() {
+		$cache_key = 'postwave_identities_' . substr( md5( $this->server_url . $this->auth_header ), 0, 12 );
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		if ( empty( $this->api_url ) ) {
+			$result = $this->discover_session();
+			if ( is_wp_error( $result ) ) {
+				return $result;
+			}
+		}
+
+		$responses = $this->request( array(
+			array( 'Identity/get', array( 'accountId' => $this->account_id, 'ids' => null ), '0' ),
+		) );
+
+		if ( is_wp_error( $responses ) ) {
+			return $responses;
+		}
+
+		$identities = $responses[0][1]['list'] ?? array();
+
+		if ( is_array( $identities ) ) {
+			set_transient( $cache_key, $identities, HOUR_IN_SECONDS );
+		}
+
+		return $identities;
+	}
+
 	public function get_account_id() {
 		return $this->account_id;
 	}

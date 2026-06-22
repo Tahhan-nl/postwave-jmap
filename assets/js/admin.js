@@ -275,11 +275,110 @@
      BOOT
   ════════════════════════════════ */
 
+  /* ════════════════════════════════
+     RETRY OPTIONS SHOW/HIDE
+  ════════════════════════════════ */
+
+  function initRetryToggle() {
+    var cb      = document.querySelector( '[name="postwave[retry_enabled]"]:not([type="hidden"])' );
+    var options = document.querySelector( '.pw-retry-options' );
+    if ( ! cb || ! options ) { return; }
+
+    function sync() {
+      options.classList.toggle( 'pw-hidden', ! cb.checked );
+    }
+    sync();
+    cb.addEventListener( 'change', sync );
+  }
+
+  /* ════════════════════════════════
+     LOAD JMAP IDENTITIES
+  ════════════════════════════════ */
+
+  function initIdentityLoader() {
+    var btn    = document.getElementById( 'pw-load-identities' );
+    var select = document.getElementById( 'pw-identity-select' );
+    var status = document.getElementById( 'pw-identity-status' );
+    var hidName  = document.getElementById( 'pw-identity-name' );
+    var hidEmail = document.getElementById( 'pw-identity-email' );
+    if ( ! btn || ! select ) { return; }
+
+    btn.addEventListener( 'click', function () {
+      btn.disabled    = true;
+      btn.textContent = 'Loading…';
+      if ( status ) { status.textContent = ''; status.classList.add( 'pw-hidden' ); }
+
+      var fd = new FormData();
+      fd.append( 'action', 'postwave_fetch_identities' );
+      fd.append( 'nonce',  cfg.identities_nonce || '' );
+
+      fetch( cfg.ajax_url, { method: 'POST', body: fd, credentials: 'same-origin' } )
+        .then( function( r ) { return r.json(); } )
+        .then( function( data ) {
+          btn.disabled    = false;
+          btn.textContent = 'Load identities';
+
+          if ( ! data.success ) {
+            if ( status ) { status.textContent = data.data.message; status.classList.remove( 'pw-hidden' ); }
+            return;
+          }
+
+          var identities = data.data.identities || [];
+          var saved      = select.value;
+
+          // Rebuild options (keep the auto-resolve first option).
+          while ( select.options.length > 1 ) { select.remove( 1 ); }
+
+          identities.forEach( function( id ) {
+            var opt   = document.createElement( 'option' );
+            opt.value = id.id;
+            opt.text  = id.name ? id.name + ' <' + id.email + '>' : id.email;
+            if ( id.id === saved ) { opt.selected = true; }
+            select.appendChild( opt );
+          } );
+
+          // Update hidden name/email fields when selection changes.
+          function syncHidden() {
+            var idx   = select.selectedIndex;
+            var selId = idx >= 0 ? select.options[ idx ].value : '';
+            identities.forEach( function( id ) {
+              if ( id.id === selId ) {
+                if ( hidName )  { hidName.value  = id.name  || ''; }
+                if ( hidEmail ) { hidEmail.value = id.email || ''; }
+              }
+            } );
+            if ( ! selId ) {
+              if ( hidName )  { hidName.value  = ''; }
+              if ( hidEmail ) { hidEmail.value = ''; }
+            }
+          }
+          select.addEventListener( 'change', syncHidden );
+          syncHidden();
+
+          if ( status ) {
+            status.textContent = identities.length + ' identit' + ( identities.length === 1 ? 'y' : 'ies' ) + ' loaded.';
+            status.classList.remove( 'pw-hidden' );
+          }
+        } )
+        .catch( function() {
+          btn.disabled    = false;
+          btn.textContent = 'Load identities';
+          if ( status ) { status.textContent = 'Request failed. Try again.'; status.classList.remove( 'pw-hidden' ); }
+        } );
+    } );
+  }
+
+  /* ════════════════════════════════
+     BOOT
+  ════════════════════════════════ */
+
   document.addEventListener('DOMContentLoaded', function () {
     initToggles();
     initPasswordToggles();
     initWizard();
     initLogDetails();
+    initRetryToggle();
+    initIdentityLoader();
 
     var connBtn  = $('#pw-test-conn');
     var emailBtn = $('#pw-test-email');

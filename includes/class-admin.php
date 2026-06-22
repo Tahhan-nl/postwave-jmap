@@ -16,11 +16,13 @@ class Postwave_Admin {
 	const MENU_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBkPSJNMi4wMDMgNS44ODRMM10gOS44ODJsNy45OTctMy45OThBMiAyIDAgMDAxNiA0SDRhMiAyIDAgMDAtMS45OTcgMS44ODR6Ii8+PHBhdGggZD0iTTE4IDguMTE4bC04IDQtOC00VjE0YTIgMiAwIDAwMiAyaDEyYTIgMiAwIDAwMi0yVjguMTE4eiIvPjwvc3ZnPg==';
 
 	public function __construct() {
-		add_action( 'admin_menu',                    array( $this, 'register_page' ) );
-		add_action( 'admin_enqueue_scripts',         array( $this, 'enqueue_assets' ) );
-		add_action( 'wp_ajax_postwave_test',         array( $this, 'ajax_test' ) );
-		add_action( 'admin_post_postwave_save',      array( $this, 'save_settings' ) );
-		add_action( 'admin_post_postwave_clear_log', array( $this, 'clear_log' ) );
+		add_action( 'admin_menu',                         array( $this, 'register_page' ) );
+		add_action( 'admin_enqueue_scripts',              array( $this, 'enqueue_assets' ) );
+		add_action( 'wp_ajax_postwave_test',              array( $this, 'ajax_test' ) );
+		add_action( 'admin_post_postwave_save',           array( $this, 'save_settings' ) );
+		add_action( 'admin_post_postwave_clear_log',      array( $this, 'clear_log' ) );
+		add_action( 'admin_post_postwave_export_log',     array( $this, 'export_log_csv' ) );
+		add_action( 'wp_ajax_postwave_fetch_identities',  array( $this, 'ajax_fetch_identities' ) );
 	}
 
 	public function register_page() {
@@ -50,13 +52,22 @@ class Postwave_Admin {
 		$in  = $_POST['postwave'] ?? array();
 
 		$settings = array(
-			'enabled'        => ! empty( $in['enabled'] ) ? 1 : 0,
-			'server_url'     => esc_url_raw( trim( $in['server_url'] ?? '' ) ),
-			'username'       => sanitize_text_field( $in['username'] ?? '' ),
-			'from_name'      => sanitize_text_field( $in['from_name'] ?? '' ),
-			'from_email'     => sanitize_email( $in['from_email'] ?? '' ),
-			'test_recipient' => sanitize_email( $in['test_recipient'] ?? '' ),
-			'password'       => ! empty( $in['password'] ) ? $in['password'] : ( $old['password'] ?? '' ),
+			'enabled'          => ! empty( $in['enabled'] ) ? 1 : 0,
+			'server_url'       => esc_url_raw( trim( $in['server_url'] ?? '' ) ),
+			'username'         => sanitize_text_field( $in['username'] ?? '' ),
+			'from_name'        => sanitize_text_field( $in['from_name'] ?? '' ),
+			'from_email'       => sanitize_email( $in['from_email'] ?? '' ),
+			'test_recipient'   => sanitize_email( $in['test_recipient'] ?? '' ),
+			'password'         => ! empty( $in['password'] ) ? $in['password'] : ( $old['password'] ?? '' ),
+			// v1.1 settings
+			'retry_enabled'    => ! empty( $in['retry_enabled'] ) ? 1 : 0,
+			'retry_max'        => min( 5, max( 1, (int) ( $in['retry_max'] ?? 3 ) ) ),
+			'retry_delay'      => in_array( (int) ( $in['retry_delay'] ?? 300 ), array( 300, 900, 1800, 3600 ), true )
+			                        ? (int) $in['retry_delay'] : 300,
+			'identity_id'      => sanitize_text_field( $in['identity_id'] ?? '' ),
+			'identity_name'    => sanitize_text_field( $in['identity_name'] ?? '' ),
+			'identity_email'   => sanitize_email( $in['identity_email'] ?? '' ),
+			'tracking_enabled' => ! empty( $in['tracking_enabled'] ) ? 1 : 0,
 		);
 
 		update_option( POSTWAVE_OPTION_KEY, $settings );
@@ -90,9 +101,10 @@ class Postwave_Admin {
 		);
 
 		wp_localize_script( 'postwave-admin', 'postwave', array(
-			'ajax_url' => admin_url( 'admin-ajax.php' ),
-			'nonce'    => wp_create_nonce( 'postwave_test' ),
-			'i18n'     => array(
+			'ajax_url'          => admin_url( 'admin-ajax.php' ),
+			'nonce'             => wp_create_nonce( 'postwave_test' ),
+			'identities_nonce'  => wp_create_nonce( 'postwave_fetch_identities' ),
+			'i18n'              => array(
 				'account'      => __( 'Account', 'postwave' ),
 				'identity'     => __( 'Identity', 'postwave' ),
 				'recipient'    => __( 'Recipient', 'postwave' ),
@@ -107,11 +119,12 @@ class Postwave_Admin {
 			return;
 		}
 
-		$options  = get_option( POSTWAVE_OPTION_KEY, array() );
-		$stats    = Postwave_Mail_Log::get_stats();
-		$entries  = Postwave_Mail_Log::get_entries();
-		$tab      = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
-		$is_setup = empty( $options['server_url'] ) && ! isset( $_GET['skip'] );
+		$options     = get_option( POSTWAVE_OPTION_KEY, array() );
+		$stats       = Postwave_Mail_Log::get_stats();
+		$entries     = Postwave_Mail_Log::get_entries();
+		$tab         = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
+		$is_setup    = empty( $options['server_url'] ) && ! isset( $_GET['skip'] );
+		$retry_count = Postwave_Retry_Queue::get_count();
 
 		include POSTWAVE_PLUGIN_DIR . 'templates/page-settings.php';
 	}
@@ -209,5 +222,69 @@ class Postwave_Admin {
 			'capabilities' => array_values( $capabilities ),
 			'warnings'     => $warnings,
 		) );
+	}
+
+	/**
+	 * Export the mail log as a CSV file download.
+	 */
+	public function export_log_csv() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_export_log' );
+
+		$filename = 'postwave-mail-log-' . gmdate( 'Y-m-d' ) . '.csv';
+		$csv      = Postwave_Mail_Log::to_csv();
+
+		header( 'Content-Type: text/csv; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . sanitize_file_name( $filename ) . '"' );
+		header( 'Content-Length: ' . strlen( $csv ) );
+		header( 'Pragma: no-cache' );
+		header( 'Expires: 0' );
+
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		echo $csv;
+		exit;
+	}
+
+	/**
+	 * AJAX: fetch JMAP identities from the configured server.
+	 */
+	public function ajax_fetch_identities() {
+		check_ajax_referer( 'postwave_fetch_identities', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'postwave' ) ) );
+		}
+
+		$options = get_option( POSTWAVE_OPTION_KEY, array() );
+
+		if ( empty( $options['server_url'] ) || empty( $options['username'] ) || empty( $options['password'] ) ) {
+			wp_send_json_error( array( 'message' => __( 'Save your server credentials first.', 'postwave' ) ) );
+		}
+
+		$client = new Postwave_JMAP_Client( $options['server_url'], $options['username'], $options['password'] );
+		$result = $client->discover_session();
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		$identities = $client->get_all_identities();
+
+		if ( is_wp_error( $identities ) ) {
+			wp_send_json_error( array( 'message' => $identities->get_error_message() ) );
+		}
+
+		// Return only safe fields.
+		$safe = array_map( function( $id ) {
+			return array(
+				'id'    => sanitize_text_field( $id['id']    ?? '' ),
+				'name'  => sanitize_text_field( $id['name']  ?? '' ),
+				'email' => sanitize_email(      $id['email'] ?? '' ),
+			);
+		}, $identities );
+
+		wp_send_json_success( array( 'identities' => $safe ) );
 	}
 }

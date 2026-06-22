@@ -1,7 +1,7 @@
 <?php
 /**
  * Postwave admin page template — v3 Professional
- * Variables: $options, $stats, $entries, $tab, $is_setup
+ * Variables: $options, $stats, $entries, $tab, $is_setup, $retry_count
  *
  * @package Postwave
  */
@@ -319,8 +319,12 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
         <input type="hidden" name="action"          value="postwave_save">
         <input type="hidden" name="postwave[_tab]"  value="general">
         <!-- Preserve connection fields -->
-        <input type="hidden" name="postwave[server_url]" value="<?php echo esc_attr( $o( 'server_url' ) ); ?>">
-        <input type="hidden" name="postwave[username]"   value="<?php echo esc_attr( $o( 'username' ) ); ?>">
+        <input type="hidden" name="postwave[server_url]"       value="<?php echo esc_attr( $o( 'server_url' ) ); ?>">
+        <input type="hidden" name="postwave[username]"         value="<?php echo esc_attr( $o( 'username' ) ); ?>">
+        <!-- Preserve v1.1 connection-tab fields -->
+        <input type="hidden" name="postwave[identity_id]"      value="<?php echo esc_attr( $o( 'identity_id' ) ); ?>">
+        <input type="hidden" name="postwave[identity_name]"    value="<?php echo esc_attr( $o( 'identity_name' ) ); ?>">
+        <input type="hidden" name="postwave[identity_email]"   value="<?php echo esc_attr( $o( 'identity_email' ) ); ?>">
 
         <!-- Enable card -->
         <div class="pw-panel">
@@ -373,6 +377,86 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
           </div>
         </div>
 
+        <!-- Automatic Retry panel -->
+        <div class="pw-panel">
+          <div class="pw-panel-header">
+            <h3><?php esc_html_e( 'Automatic Retry', 'postwave' ); ?></h3>
+            <p><?php esc_html_e( 'Automatically re-send failed emails using WP-Cron with exponential backoff.', 'postwave' ); ?></p>
+          </div>
+          <div class="pw-panel-body">
+            <input type="hidden" name="postwave[retry_enabled]" value="0">
+            <div class="pw-field-row pw-field-row--flex">
+              <div class="pw-field-info">
+                <label class="pw-label"><strong><?php esc_html_e( 'Enable retry queue', 'postwave' ); ?></strong></label>
+                <p class="pw-desc"><?php esc_html_e( 'Failed sends will be retried automatically in the background.', 'postwave' ); ?></p>
+              </div>
+              <label class="pw-toggle">
+                <input type="checkbox" name="postwave[retry_enabled]" class="pw-toggle-cb" value="1" <?php checked( $options['retry_enabled'] ?? 0 ); ?>>
+                <span class="pw-toggle-track"><span class="pw-toggle-thumb"></span></span>
+              </label>
+            </div>
+
+            <div class="pw-field-row pw-retry-options <?php echo empty( $options['retry_enabled'] ) ? 'pw-hidden' : ''; ?>">
+              <div class="pw-col-2">
+                <label class="pw-label" for="pw-retry-max"><?php esc_html_e( 'Max retry attempts', 'postwave' ); ?></label>
+                <select id="pw-retry-max" name="postwave[retry_max]" class="pw-select">
+                  <?php foreach ( array( 1, 2, 3, 4, 5 ) as $n ) : ?>
+                    <option value="<?php echo esc_attr( $n ); ?>" <?php selected( (int) ( $options['retry_max'] ?? 3 ), $n ); ?>><?php echo esc_html( $n ); ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="pw-col-2">
+                <label class="pw-label" for="pw-retry-delay"><?php esc_html_e( 'Initial retry delay', 'postwave' ); ?></label>
+                <select id="pw-retry-delay" name="postwave[retry_delay]" class="pw-select">
+                  <option value="300"  <?php selected( (int) ( $options['retry_delay'] ?? 300 ), 300 );  ?>><?php esc_html_e( '5 minutes', 'postwave' ); ?></option>
+                  <option value="900"  <?php selected( (int) ( $options['retry_delay'] ?? 300 ), 900 );  ?>><?php esc_html_e( '15 minutes', 'postwave' ); ?></option>
+                  <option value="1800" <?php selected( (int) ( $options['retry_delay'] ?? 300 ), 1800 ); ?>><?php esc_html_e( '30 minutes', 'postwave' ); ?></option>
+                  <option value="3600" <?php selected( (int) ( $options['retry_delay'] ?? 300 ), 3600 ); ?>><?php esc_html_e( '1 hour', 'postwave' ); ?></option>
+                </select>
+                <p class="pw-desc"><?php esc_html_e( 'Delay doubles on each retry attempt (exponential backoff).', 'postwave' ); ?></p>
+              </div>
+            </div>
+
+            <?php if ( $retry_count > 0 ) : ?>
+            <div class="pw-notice pw-notice--info" style="margin-top:16px;">
+              <?php printf(
+                /* translators: %d: number of emails pending retry */
+                esc_html( _n( '%d email is pending retry.', '%d emails are pending retry.', $retry_count, 'postwave' ) ),
+                (int) $retry_count
+              ); ?>
+            </div>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- Open Tracking panel -->
+        <div class="pw-panel">
+          <div class="pw-panel-header">
+            <h3><?php esc_html_e( 'Open Tracking', 'postwave' ); ?></h3>
+            <p><?php esc_html_e( 'Track when recipients open emails sent by your site. Opt-in only — read the privacy note below.', 'postwave' ); ?></p>
+          </div>
+          <div class="pw-panel-body">
+            <input type="hidden" name="postwave[tracking_enabled]" value="0">
+            <div class="pw-field-row pw-field-row--flex">
+              <div class="pw-field-info">
+                <label class="pw-label"><strong><?php esc_html_e( 'Enable open tracking', 'postwave' ); ?></strong></label>
+                <p class="pw-desc"><?php esc_html_e( 'Embeds a 1×1 tracking pixel in outgoing HTML emails. Plain-text emails are never tracked.', 'postwave' ); ?></p>
+              </div>
+              <label class="pw-toggle">
+                <input type="checkbox" name="postwave[tracking_enabled]" class="pw-toggle-cb" value="1" <?php checked( $options['tracking_enabled'] ?? 0 ); ?>>
+                <span class="pw-toggle-track"><span class="pw-toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="pw-notice pw-notice--warning" style="margin-top:16px;">
+              <strong><?php esc_html_e( 'Privacy:', 'postwave' ); ?></strong>
+              <?php esc_html_e( 'Open tracking records when an email is opened. You may need to disclose this in your privacy policy. No personal data is sent to external servers — tracking is handled entirely on your own WordPress installation.', 'postwave' ); ?>
+            </div>
+          </div>
+          <div class="pw-panel-footer">
+            <button type="submit" class="pw-btn pw-btn-primary"><?php esc_html_e( 'Save settings', 'postwave' ); ?></button>
+          </div>
+        </div>
+
       </form>
 
       <!-- ══ TAB: CONNECTION ══ -->
@@ -383,10 +467,15 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
         <input type="hidden" name="action"          value="postwave_save">
         <input type="hidden" name="postwave[_tab]"  value="connection">
         <!-- Preserve general fields -->
-        <input type="hidden" name="postwave[enabled]"        value="<?php echo esc_attr( $o( 'enabled', 0 ) ); ?>">
-        <input type="hidden" name="postwave[from_name]"      value="<?php echo esc_attr( $o( 'from_name' ) ); ?>">
-        <input type="hidden" name="postwave[from_email]"     value="<?php echo esc_attr( $o( 'from_email' ) ); ?>">
-        <input type="hidden" name="postwave[test_recipient]" value="<?php echo esc_attr( $o( 'test_recipient' ) ); ?>">
+        <input type="hidden" name="postwave[enabled]"          value="<?php echo esc_attr( $o( 'enabled', 0 ) ); ?>">
+        <input type="hidden" name="postwave[from_name]"        value="<?php echo esc_attr( $o( 'from_name' ) ); ?>">
+        <input type="hidden" name="postwave[from_email]"       value="<?php echo esc_attr( $o( 'from_email' ) ); ?>">
+        <input type="hidden" name="postwave[test_recipient]"   value="<?php echo esc_attr( $o( 'test_recipient' ) ); ?>">
+        <!-- Preserve v1.1 general-tab fields -->
+        <input type="hidden" name="postwave[retry_enabled]"    value="<?php echo esc_attr( $o( 'retry_enabled', 0 ) ); ?>">
+        <input type="hidden" name="postwave[retry_max]"        value="<?php echo esc_attr( $o( 'retry_max', 3 ) ); ?>">
+        <input type="hidden" name="postwave[retry_delay]"      value="<?php echo esc_attr( $o( 'retry_delay', 300 ) ); ?>">
+        <input type="hidden" name="postwave[tracking_enabled]" value="<?php echo esc_attr( $o( 'tracking_enabled', 0 ) ); ?>">
 
         <div class="pw-panel">
           <div class="pw-panel-header">
@@ -430,6 +519,45 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
           </div>
           <div class="pw-panel-footer">
             <button type="submit" class="pw-btn pw-btn-primary"><?php esc_html_e( 'Save credentials', 'postwave' ); ?></button>
+          </div>
+        </div>
+
+        <!-- Sender Identity panel -->
+        <div class="pw-panel">
+          <div class="pw-panel-header">
+            <h3><?php esc_html_e( 'Sender Identity', 'postwave' ); ?></h3>
+            <p><?php esc_html_e( 'Choose which JMAP sending identity to use. Auto-resolve matches the From email to an identity on your server.', 'postwave' ); ?></p>
+          </div>
+          <div class="pw-panel-body">
+            <div class="pw-field">
+              <label class="pw-label" for="pw-identity-select"><?php esc_html_e( 'Identity', 'postwave' ); ?></label>
+              <div class="pw-identity-wrap">
+                <div class="pw-identity-controls">
+                  <select id="pw-identity-select" name="postwave[identity_id]" class="pw-select pw-identity-dropdown">
+                    <option value=""><?php esc_html_e( '— Auto-resolve (recommended) —', 'postwave' ); ?></option>
+                    <?php
+                    $saved_id    = $options['identity_id'] ?? '';
+                    if ( ! empty( $saved_id ) ) :
+                      $saved_name  = sanitize_text_field( $options['identity_name'] ?? $saved_id );
+                      $saved_email = sanitize_email( $options['identity_email'] ?? '' );
+                      echo '<option value="' . esc_attr( $saved_id ) . '" selected>' . esc_html( $saved_name . ( $saved_email ? ' <' . $saved_email . '>' : '' ) ) . '</option>';
+                    endif;
+                    ?>
+                  </select>
+                  <!-- Hidden fields so the selected identity name/email survive the save round-trip -->
+                  <input type="hidden" id="pw-identity-name"  name="postwave[identity_name]"  value="<?php echo esc_attr( $options['identity_name'] ?? '' ); ?>">
+                  <input type="hidden" id="pw-identity-email" name="postwave[identity_email]" value="<?php echo esc_attr( $options['identity_email'] ?? '' ); ?>">
+                  <button type="button" id="pw-load-identities" class="pw-btn pw-btn--secondary pw-btn-secondary">
+                    <?php esc_html_e( 'Load identities', 'postwave' ); ?>
+                  </button>
+                </div>
+                <p class="pw-desc" style="margin-top:6px;"><?php esc_html_e( 'Click "Load identities" to fetch the list from your JMAP server. Save credentials on the Connection tab first.', 'postwave' ); ?></p>
+                <p id="pw-identity-status" class="pw-desc pw-hidden" style="margin-top:4px;"></p>
+              </div>
+            </div>
+          </div>
+          <div class="pw-panel-footer">
+            <button type="submit" class="pw-btn pw-btn-primary"><?php esc_html_e( 'Save identity', 'postwave' ); ?></button>
           </div>
         </div>
       </form>
@@ -481,15 +609,24 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
             <p><?php esc_html_e( 'Last 100 send attempts. Bodies are never stored.', 'postwave' ); ?></p>
           </div>
           <?php if ( ! empty( $entries ) ) : ?>
-          <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
-            <input type="hidden" name="action" value="postwave_clear_log">
-            <?php wp_nonce_field( 'postwave_clear_log' ); ?>
-            <button type="submit" class="pw-btn pw-btn-danger"
-              onclick="return confirm('<?php echo esc_js( __( 'Clear all log entries? This cannot be undone.', 'postwave' ) ); ?>')">
-              <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-              <?php esc_html_e( 'Clear log', 'postwave' ); ?>
-            </button>
-          </form>
+          <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+              <input type="hidden" name="action" value="postwave_export_log">
+              <?php wp_nonce_field( 'postwave_export_log' ); ?>
+              <button type="submit" class="pw-btn pw-btn-secondary pw-btn--sm">
+                &#8595; <?php esc_html_e( 'Export CSV', 'postwave' ); ?>
+              </button>
+            </form>
+            <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="display:inline;">
+              <input type="hidden" name="action" value="postwave_clear_log">
+              <?php wp_nonce_field( 'postwave_clear_log' ); ?>
+              <button type="submit" class="pw-btn pw-btn-danger pw-btn--sm"
+                onclick="return confirm('<?php echo esc_js( __( 'Clear all log entries? This cannot be undone.', 'postwave' ) ); ?>')">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <?php esc_html_e( 'Clear log', 'postwave' ); ?>
+              </button>
+            </form>
+          </div>
           <?php endif; ?>
         </div>
         <div class="pw-panel-body pw-panel-body-flush">
@@ -516,14 +653,38 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
               </thead>
               <tbody>
                 <?php foreach ( $entries as $e ) :
-                  $sent = ( $e['status'] ?? '' ) === 'sent';
-                  $ts   = (int) ( $e['timestamp'] ?? 0 );
+                  $sent         = ( $e['status'] ?? '' ) === 'sent';
+                  $ts           = (int) ( $e['timestamp'] ?? 0 );
+                  $retry_status = $e['retry_status'] ?? '';
+                  $opened_at    = $e['opened_at'] ?? null;
                 ?>
                 <tr>
                   <td>
                     <span class="pw-badge-pill pw-badge-pill-<?php echo $sent ? 'success' : 'danger'; ?>">
                       <?php echo $sent ? esc_html__( 'Sent', 'postwave' ) : esc_html__( 'Failed', 'postwave' ); ?>
                     </span>
+                    <?php if ( 'retried' === $retry_status ) : ?>
+                    <span class="pw-badge pw-badge--retried" title="<?php esc_attr_e( 'Sent via retry queue', 'postwave' ); ?>">
+                      <?php echo esc_html( sprintf(
+                        /* translators: %d: number of retries */
+                        _n( 'retry %d', 'retry %d', (int) ( $e['retry_count'] ?? 1 ), 'postwave' ),
+                        (int) ( $e['retry_count'] ?? 1 )
+                      ) ); ?>
+                    </span>
+                    <?php elseif ( 'exhausted' === $retry_status ) : ?>
+                    <span class="pw-badge pw-badge--exhausted" title="<?php esc_attr_e( 'All retry attempts exhausted', 'postwave' ); ?>">
+                      <?php esc_html_e( 'exhausted', 'postwave' ); ?>
+                    </span>
+                    <?php endif; ?>
+                    <?php if ( ! empty( $opened_at ) ) : ?>
+                    <span class="pw-badge pw-badge--opened" title="<?php echo esc_attr( sprintf(
+                      /* translators: %s: date/time */
+                      __( 'Opened at %s', 'postwave' ),
+                      wp_date( 'Y-m-d H:i', (int) $opened_at )
+                    ) ); ?>">
+                      <?php esc_html_e( 'opened', 'postwave' ); ?>
+                    </span>
+                    <?php endif; ?>
                   </td>
                   <td class="pw-td-mono"><?php echo esc_html( $ts ? wp_date( 'Y-m-d H:i', $ts ) : '—' ); ?></td>
                   <td class="pw-td-truncate"><?php echo esc_html( $e['to'] ?? '' ); ?></td>
@@ -532,19 +693,22 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
                     <button type="button" class="pw-detail-btn"><?php esc_html_e( 'Details', 'postwave' ); ?> ▾</button>
                     <dl class="pw-detail-panel" style="display:none">
                       <?php if ( ! empty( $e['from'] ) ) : ?>
-                      <div><dt>From</dt><dd><code><?php echo esc_html( $e['from'] ); ?></code></dd></div>
+                      <div><dt><?php esc_html_e( 'From', 'postwave' ); ?></dt><dd><code><?php echo esc_html( $e['from'] ); ?></code></dd></div>
                       <?php endif; ?>
                       <?php if ( ! empty( $e['account_id'] ) ) : ?>
-                      <div><dt>Account</dt><dd><code><?php echo esc_html( $e['account_id'] ); ?></code></dd></div>
+                      <div><dt><?php esc_html_e( 'Account', 'postwave' ); ?></dt><dd><code><?php echo esc_html( $e['account_id'] ); ?></code></dd></div>
                       <?php endif; ?>
                       <?php if ( ! empty( $e['identity_id'] ) ) : ?>
-                      <div><dt>Identity</dt><dd><code><?php echo esc_html( $e['identity_id'] ); ?></code></dd></div>
+                      <div><dt><?php esc_html_e( 'Identity', 'postwave' ); ?></dt><dd><code><?php echo esc_html( $e['identity_id'] ); ?></code></dd></div>
                       <?php endif; ?>
                       <?php if ( ! empty( $e['email_id'] ) ) : ?>
-                      <div><dt>Email ID</dt><dd><code><?php echo esc_html( $e['email_id'] ); ?></code></dd></div>
+                      <div><dt><?php esc_html_e( 'Email ID', 'postwave' ); ?></dt><dd><code><?php echo esc_html( $e['email_id'] ); ?></code></dd></div>
+                      <?php endif; ?>
+                      <?php if ( ! empty( $opened_at ) ) : ?>
+                      <div><dt><?php esc_html_e( 'Opened', 'postwave' ); ?></dt><dd><?php echo esc_html( wp_date( 'Y-m-d H:i:s', (int) $opened_at ) ); ?></dd></div>
                       <?php endif; ?>
                       <?php if ( ! empty( $e['error'] ) ) : ?>
-                      <div class="pw-detail-error"><dt>Error</dt><dd><?php echo esc_html( $e['error'] ); ?></dd></div>
+                      <div class="pw-detail-error"><dt><?php esc_html_e( 'Error', 'postwave' ); ?></dt><dd><?php echo esc_html( $e['error'] ); ?></dd></div>
                       <?php endif; ?>
                     </dl>
                   </td>
