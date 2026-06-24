@@ -65,7 +65,7 @@ class Postwave_Mailer {
 		$is_retry = ( $retry_number > 0 );
 
 		if ( empty( $to_list ) ) {
-			return $this->fail( $log, __( 'No recipient address provided.', 'postwave' ), $atts, $is_retry, $log_id );
+			return $this->fail( $log, __( 'No recipient address provided.', 'postwave-jmap' ), $atts, $is_retry, $log_id );
 		}
 
 		// ── Account routing ───────────────────────────────────────────────────────
@@ -216,12 +216,12 @@ class Postwave_Mailer {
 
 		if ( ! empty( $create_resp[0][1]['notCreated'] ) ) {
 			$err = reset( $create_resp[0][1]['notCreated'] );
-			return $this->fail( $log, $err['description'] ?? __( 'Failed to create email via JMAP.', 'postwave' ), $atts, $is_retry, $log_id );
+			return $this->fail( $log, $err['description'] ?? __( 'Failed to create email via JMAP.', 'postwave-jmap' ), $atts, $is_retry, $log_id );
 		}
 
 		$email_id = $create_resp[0][1]['created'][ $create_id ]['id'] ?? '';
 		if ( empty( $email_id ) ) {
-			return $this->fail( $log, __( 'JMAP email creation returned no email id.', 'postwave' ), $atts, $is_retry, $log_id );
+			return $this->fail( $log, __( 'JMAP email creation returned no email id.', 'postwave-jmap' ), $atts, $is_retry, $log_id );
 		}
 		$log['email_id'] = $email_id;
 
@@ -245,12 +245,12 @@ class Postwave_Mailer {
 
 		if ( ! empty( $submit_resp[0][1]['notCreated'] ) ) {
 			$err = reset( $submit_resp[0][1]['notCreated'] );
-			return $this->fail( $log, $err['description'] ?? __( 'Failed to submit email via JMAP.', 'postwave' ), $atts, $is_retry, $log_id );
+			return $this->fail( $log, $err['description'] ?? __( 'Failed to submit email via JMAP.', 'postwave-jmap' ), $atts, $is_retry, $log_id );
 		}
 
 		foreach ( array_merge( $create_resp, $submit_resp ) as $resp ) {
 			if ( isset( $resp[0] ) && 'error' === $resp[0] ) {
-				return $this->fail( $log, $resp[1]['description'] ?? __( 'JMAP error.', 'postwave' ), $atts, $is_retry, $log_id );
+				return $this->fail( $log, $resp[1]['description'] ?? __( 'JMAP error.', 'postwave-jmap' ), $atts, $is_retry, $log_id );
 			}
 		}
 

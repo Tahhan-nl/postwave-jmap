@@ -8,7 +8,7 @@
  * Author URI:  https://tahhan.nl
  * License:     GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: postwave
+ * Text Domain: postwave-jmap
  * Domain Path: /languages
  * Requires at least: 5.8
  * Tested up to: 7.0
@@ -61,7 +61,7 @@ add_action( 'plugins_loaded', 'postwave_init' );
 
 function postwave_action_links( $links ) {
 	$url  = esc_url( admin_url( 'admin.php?page=postwave' ) );
-	array_unshift( $links, '<a href="' . $url . '">' . esc_html__( 'Settings', 'postwave' ) . '</a>' );
+	array_unshift( $links, '<a href="' . $url . '">' . esc_html__( 'Settings', 'postwave-jmap' ) . '</a>' );
 	return $links;
 }
 add_filter( 'plugin_action_links_' . POSTWAVE_PLUGIN_BASE, 'postwave_action_links' );
