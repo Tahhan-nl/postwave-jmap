@@ -3,7 +3,7 @@ Contributors: tahhan
 Tags: email, mail, jmap, smtp, transactional-email
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -113,6 +113,11 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 
 == Changelog ==
 
+= 1.3.1 =
+* Fixed: Fatal syntax error in admin template (unexpected endif) preventing plugin from loading
+* Improved: Mail log now shows a dedicated "Opened" column with date/time instead of a small badge
+* Improved: Open tracking status is now clearly visible per email in the log table
+
 = 1.3.0 =
 * Added: Setup wizard overlay for first-time configuration
 * Added: Status bar on General tab showing sent today, sent this week, failed today, and total logged counts
@@ -150,6 +155,9 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 * Live connection testing (AJAX)
 
 == Upgrade Notice ==
+
+= 1.3.1 =
+Bug fix: resolves a fatal syntax error that prevented the plugin from loading. Update immediately.
 
 = 1.3.0 =
 UI polish update with empty states, toast notifications, and improved setup wizard. No database changes — safe to upgrade.

@@ -1833,3 +1833,17 @@ body.wp-admin #pw-page .pw-add-condition {
     margin-left: auto;
     margin-right: auto;
 }
+
+/* ── Mail log opened column ─────────────────────────────────── */
+.pw-td-opened { white-space: nowrap; }
+.pw-opened-yes {
+    color: #16a34a;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: default;
+}
+.pw-opened-no {
+    color: #d1d5db;
+    font-size: 14px;
+    cursor: default;
+}

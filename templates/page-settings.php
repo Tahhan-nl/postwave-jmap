@@ -961,6 +961,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
                   <th><?php esc_html_e( 'Date / Time', 'postwave' ); ?></th>
                   <th><?php esc_html_e( 'To', 'postwave' ); ?></th>
                   <th><?php esc_html_e( 'Subject', 'postwave' ); ?></th>
+                  <th title="<?php esc_attr_e( 'When the recipient opened this email (requires open tracking to be enabled)', 'postwave' ); ?>"><?php esc_html_e( 'Opened', 'postwave' ); ?></th>
                   <th><?php esc_html_e( 'Details', 'postwave' ); ?></th>
                 </tr>
               </thead>
@@ -989,19 +990,20 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
                       <?php esc_html_e( 'exhausted', 'postwave' ); ?>
                     </span>
                     <?php endif; ?>
-                    <?php if ( ! empty( $opened_at ) ) : ?>
-                    <span class="pw-badge pw-badge--opened" title="<?php echo esc_attr( sprintf(
-                      /* translators: %s: date/time */
-                      __( 'Opened at %s', 'postwave' ),
-                      wp_date( 'Y-m-d H:i', (int) $opened_at )
-                    ) ); ?>">
-                      <?php esc_html_e( 'opened', 'postwave' ); ?>
-                    </span>
-                    <?php endif; ?>
                   </td>
                   <td class="pw-td-mono"><?php echo esc_html( $ts ? wp_date( 'Y-m-d H:i', $ts ) : '—' ); ?></td>
                   <td class="pw-td-truncate"><?php echo esc_html( $e['to'] ?? '' ); ?></td>
                   <td class="pw-td-truncate"><?php echo esc_html( $e['subject'] ?? '' ); ?></td>
+                  <td class="pw-td-opened">
+                    <?php if ( ! empty( $opened_at ) ) : ?>
+                    <span class="pw-opened-yes" title="<?php echo esc_attr( wp_date( 'Y-m-d H:i:s', (int) $opened_at ) ); ?>">
+                      <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="vertical-align:-2px;margin-right:3px;"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/></svg>
+                      <?php echo esc_html( wp_date( 'M j, H:i', (int) $opened_at ) ); ?>
+                    </span>
+                    <?php else : ?>
+                    <span class="pw-opened-no" title="<?php esc_attr_e( 'Not yet opened, or open tracking is disabled', 'postwave' ); ?>">—</span>
+                    <?php endif; ?>
+                  </td>
                   <td>
                     <button type="button" class="pw-detail-btn"><?php esc_html_e( 'Details', 'postwave' ); ?> ▾</button>
                     <dl class="pw-detail-panel" style="display:none">
@@ -1040,5 +1042,3 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
     </main><!-- /.pw-main -->
   </div><!-- /.pw-app-body -->
 </div><!-- #pw-page -->
-
-<?php endif; /* wizard / dashboard */ ?>
