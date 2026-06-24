@@ -3,7 +3,7 @@ Contributors: tahhan
 Tags: email, mail, jmap, smtp, transactional-email
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 Requires PHP: 7.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,13 @@ Postwave JMAP only makes an HTTP request when an email is actually being sent. I
 5. **Setup wizard** — guided 3-step onboarding for new installs
 
 == Changelog ==
+
+= 1.2.0 =
+* New: Multiple JMAP accounts — configure multiple JMAP server accounts in the new Accounts tab
+* New: Email routing rules — route emails to specific accounts based on recipient domain, subject, sender, or detected plugin
+* New: WooCommerce integration — auto-detects WooCommerce emails (compatible with WC 3.1+) for use in routing rules
+* New: Routing condition types: recipient domain, recipient email, sender email, subject contains, plugin/email type
+* New: Per-account connection testing in the Accounts tab
 
 = 1.1.0 =
 * New: Automatic retry queue — failed emails re-sent via WP-Cron with exponential backoff

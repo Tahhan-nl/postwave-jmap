@@ -68,19 +68,9 @@ class Postwave_Mailer {
 			return $this->fail( $log, __( 'No recipient address provided.', 'postwave' ), $atts, $is_retry, $log_id );
 		}
 
-		$client = new Postwave_JMAP_Client(
-			$this->options['server_url'],
-			$this->options['username'],
-			$this->options['password']
-		);
-
-		$session = $client->discover_session();
-		if ( is_wp_error( $session ) ) {
-			return $this->fail( $log, $session->get_error_message(), $atts, $is_retry, $log_id );
-		}
-
-		// Resolve identity: options-configured ID → per-send filter → auto-resolve by from_email.
-		$forced_identity_id = sanitize_text_field( $this->options['identity_id'] ?? '' );
+		// ── Account routing ───────────────────────────────────────────────────────
+		// Resolve identity from options first (before routing overrides it).
+		$forced_identity_id = sanitize_text_field( isset( $this->options['identity_id'] ) ? $this->options['identity_id'] : '' );
 
 		/**
 		 * Filter the JMAP identity ID used for the current send.
@@ -90,6 +80,32 @@ class Postwave_Mailer {
 		 */
 		$forced_identity_id = (string) apply_filters( 'postwave_identity_id', $forced_identity_id, $atts );
 
+		$routed_account = Postwave_Router::resolve( $atts );
+
+		if ( null !== $routed_account ) {
+			$account_server_url = $routed_account['server_url'];
+			$account_username   = $routed_account['username'];
+			$account_password   = $routed_account['password'];
+			// Allow the rule's identity_id to override the account's identity_id.
+			if ( ! empty( $routed_account['identity_id'] ) && empty( $forced_identity_id ) ) {
+				$forced_identity_id = $routed_account['identity_id'];
+			}
+			$log['routed_to'] = $routed_account['id'];
+		} else {
+			// Fall back to primary account credentials.
+			$account_server_url = $this->options['server_url'];
+			$account_username   = $this->options['username'];
+			$account_password   = $this->options['password'];
+		}
+
+		$client = new Postwave_JMAP_Client( $account_server_url, $account_username, $account_password );
+
+		$session = $client->discover_session();
+		if ( is_wp_error( $session ) ) {
+			return $this->fail( $log, $session->get_error_message(), $atts, $is_retry, $log_id );
+		}
+
+		// Resolve identity: forced_identity_id was set above (before routing). Auto-resolve by from_email as fallback.
 		if ( ! empty( $forced_identity_id ) ) {
 			$identity_id = $forced_identity_id;
 		} else {
@@ -244,6 +260,7 @@ class Postwave_Mailer {
 			Postwave_Mail_Log::add( array_merge( $log, array( 'status' => 'sent' ) ) );
 		}
 
+		Postwave_Router::clear_context();
 		return true;
 	}
 
@@ -287,6 +304,7 @@ class Postwave_Mailer {
 			}
 		}
 
+		Postwave_Router::clear_context();
 		return false;
 	}
 

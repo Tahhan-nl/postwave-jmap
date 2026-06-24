@@ -3,7 +3,7 @@
  * Plugin Name: Postwave JMAP
  * Plugin URI:  https://github.com/Tahhan-nl/postwave-jmap
  * Description: Sends WordPress emails via the modern JMAP protocol (RFC 8620/8621). No SMTP ports needed — works with Stalwart, Fastmail, Cyrus and more. Includes live connection testing and full mail logging.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      Tahhan
  * Author URI:  https://tahhan.nl
  * License:     GPL-2.0-or-later
@@ -19,18 +19,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'POSTWAVE_VERSION',      '1.1.0' );
+define( 'POSTWAVE_VERSION',      '1.2.0' );
 define( 'POSTWAVE_PLUGIN_DIR',   plugin_dir_path( __FILE__ ) );
 define( 'POSTWAVE_PLUGIN_URL',   plugin_dir_url( __FILE__ ) );
 define( 'POSTWAVE_PLUGIN_BASE',  plugin_basename( __FILE__ ) );
-define( 'POSTWAVE_OPTION_KEY',   'postwave_settings' );
-define( 'POSTWAVE_LOG_OPTION',   'postwave_mail_log' );
-define( 'POSTWAVE_RETRY_OPTION', 'postwave_retry_queue' );
+define( 'POSTWAVE_OPTION_KEY',    'postwave_settings' );
+define( 'POSTWAVE_LOG_OPTION',    'postwave_mail_log' );
+define( 'POSTWAVE_RETRY_OPTION',  'postwave_retry_queue' );
+define( 'POSTWAVE_ACCOUNTS_OPTION', 'postwave_accounts' );
+define( 'POSTWAVE_ROUTING_OPTION',  'postwave_routing_rules' );
 
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-jmap-client.php';
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-mail-log.php';
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-retry-queue.php';
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-open-tracker.php';
+require_once POSTWAVE_PLUGIN_DIR . 'includes/class-account-manager.php';
+require_once POSTWAVE_PLUGIN_DIR . 'includes/class-router.php';
+require_once POSTWAVE_PLUGIN_DIR . 'includes/class-integration-woocommerce.php';
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-mailer.php';
 require_once POSTWAVE_PLUGIN_DIR . 'includes/class-admin.php';
 
@@ -41,6 +46,11 @@ function postwave_init() {
 
 	Postwave_Retry_Queue::init();
 	Postwave_Open_Tracker::init();
+
+	// Initialize integrations when relevant plugins are active.
+	if ( class_exists( 'WooCommerce' ) ) {
+		Postwave_Integration_WooCommerce::init();
+	}
 
 	$options = get_option( POSTWAVE_OPTION_KEY, array() );
 	if ( ! empty( $options['enabled'] ) && ! empty( $options['server_url'] ) ) {
@@ -94,6 +104,9 @@ function postwave_activate() {
 	}
 
 	Postwave_Retry_Queue::schedule();
+
+	// v1.2: migrate existing settings to account manager.
+	Postwave_Account_Manager::maybe_migrate();
 }
 register_activation_hook( __FILE__, 'postwave_activate' );
 

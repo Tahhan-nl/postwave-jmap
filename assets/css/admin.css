@@ -1394,3 +1394,208 @@ body.wp-admin #pw-page .pw-badge {
 body.wp-admin #pw-page .pw-badge--retried   { background: #eef2ff; color: #4f46e5 !important; }
 body.wp-admin #pw-page .pw-badge--exhausted { background: #fef2f2; color: #b91c1c !important; }
 body.wp-admin #pw-page .pw-badge--opened    { background: #f0fdf4; color: #15803d !important; }
+
+/* ── v1.2: Accounts & Routing ──────────────────────────────────────────── */
+
+/* Account cards */
+body.wp-admin #pw-page .pw-account-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+body.wp-admin #pw-page .pw-account-card {
+  background: #fff;
+  border: 1px solid var(--pw-border, var(--pw-gray-200));
+  border-radius: 8px;
+  padding: 16px 20px;
+}
+body.wp-admin #pw-page .pw-account-card-header {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+body.wp-admin #pw-page .pw-account-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--pw-text, var(--pw-gray-800));
+  flex: 1;
+}
+body.wp-admin #pw-page .pw-account-url {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--pw-muted, var(--pw-gray-500));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  margin-bottom: 12px;
+}
+body.wp-admin #pw-page .pw-account-actions {
+  display: flex !important;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+body.wp-admin #pw-page .pw-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+body.wp-admin #pw-page .pw-status-dot--ok   { background: #00a32a; }
+body.wp-admin #pw-page .pw-status-dot--fail { background: #d63638; }
+body.wp-admin #pw-page .pw-status-dot--none { background: #c3c4c7; }
+body.wp-admin #pw-page .pw-badge--primary {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9px;
+  letter-spacing: 0.3px;
+}
+
+/* Inline edit form */
+body.wp-admin #pw-page .pw-inline-form {
+  background: #f9fafb;
+  border: 1px solid var(--pw-border, var(--pw-gray-200));
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+body.wp-admin #pw-page .pw-inline-form.pw-hidden {
+  display: none !important;
+}
+body.wp-admin #pw-page .pw-inline-form h3 {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--pw-text, var(--pw-gray-800));
+}
+body.wp-admin #pw-page .pw-form-grid-2 {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+body.wp-admin #pw-page .pw-form-grid-1 {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+body.wp-admin #pw-page .pw-form-actions {
+  display: flex !important;
+  gap: 8px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+/* Routing table */
+body.wp-admin #pw-page .pw-rules-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+body.wp-admin #pw-page .pw-rules-table th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--pw-muted, var(--pw-gray-500));
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pw-border, var(--pw-gray-200));
+  background: #f9fafb;
+}
+body.wp-admin #pw-page .pw-rules-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f1;
+  vertical-align: middle;
+  font-size: 13px;
+  color: var(--pw-text, var(--pw-gray-800));
+}
+body.wp-admin #pw-page .pw-rules-table tr:last-child td {
+  border-bottom: none;
+}
+body.wp-admin #pw-page .pw-rule-conditions {
+  font-size: 12px;
+  color: var(--pw-muted, var(--pw-gray-500));
+}
+body.wp-admin #pw-page .pw-rule-conditions code {
+  font-size: 11px;
+  background: #f0f0f1;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+body.wp-admin #pw-page .pw-priority-btns {
+  display: flex !important;
+  flex-direction: column;
+  gap: 2px;
+}
+body.wp-admin #pw-page .pw-priority-btns button {
+  background: none;
+  border: 1px solid var(--pw-border, var(--pw-gray-200));
+  border-radius: 3px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--pw-muted, var(--pw-gray-500));
+  padding: 0;
+}
+body.wp-admin #pw-page .pw-priority-btns button:hover {
+  background: var(--pw-gray-100);
+  border-color: var(--pw-accent);
+  color: var(--pw-accent);
+}
+
+/* Condition rows */
+body.wp-admin #pw-page .pw-conditions-list {
+  display: flex !important;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+body.wp-admin #pw-page .pw-condition-row {
+  display: flex !important;
+  gap: 8px;
+  align-items: center;
+}
+body.wp-admin #pw-page .pw-condition-row select,
+body.wp-admin #pw-page .pw-condition-row input[type="text"] {
+  flex: 1;
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid var(--pw-border, var(--pw-gray-200));
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--pw-text, var(--pw-gray-800));
+}
+body.wp-admin #pw-page .pw-condition-row select:focus,
+body.wp-admin #pw-page .pw-condition-row input:focus {
+  border-color: var(--pw-accent);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99,102,241,.15);
+}
+body.wp-admin #pw-page .pw-remove-condition {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--pw-muted, var(--pw-gray-500));
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+body.wp-admin #pw-page .pw-remove-condition:hover { color: #d63638; }
+body.wp-admin #pw-page .pw-add-condition {
+  font-size: 12px;
+  color: var(--pw-accent);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+}

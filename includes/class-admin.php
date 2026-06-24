@@ -23,6 +23,13 @@ class Postwave_Admin {
 		add_action( 'admin_post_postwave_clear_log',      array( $this, 'clear_log' ) );
 		add_action( 'admin_post_postwave_export_log',     array( $this, 'export_log_csv' ) );
 		add_action( 'wp_ajax_postwave_fetch_identities',  array( $this, 'ajax_fetch_identities' ) );
+		// v1.2 — accounts & routing.
+		add_action( 'admin_post_postwave_save_account',   array( $this, 'save_account' ) );
+		add_action( 'admin_post_postwave_delete_account', array( $this, 'delete_account' ) );
+		add_action( 'admin_post_postwave_save_rule',      array( $this, 'save_rule' ) );
+		add_action( 'admin_post_postwave_delete_rule',    array( $this, 'delete_rule' ) );
+		add_action( 'admin_post_postwave_reorder_rules',  array( $this, 'reorder_rules' ) );
+		add_action( 'wp_ajax_postwave_test_account',      array( $this, 'ajax_test_account' ) );
 	}
 
 	public function register_page() {
@@ -101,10 +108,11 @@ class Postwave_Admin {
 		);
 
 		wp_localize_script( 'postwave-admin', 'postwave', array(
-			'ajax_url'          => admin_url( 'admin-ajax.php' ),
-			'nonce'             => wp_create_nonce( 'postwave_test' ),
-			'identities_nonce'  => wp_create_nonce( 'postwave_fetch_identities' ),
-			'i18n'              => array(
+			'ajax_url'           => admin_url( 'admin-ajax.php' ),
+			'nonce'              => wp_create_nonce( 'postwave_test' ),
+			'identities_nonce'   => wp_create_nonce( 'postwave_fetch_identities' ),
+			'test_account_nonce' => wp_create_nonce( 'postwave_test_account' ),
+			'i18n'               => array(
 				'account'      => __( 'Account', 'postwave' ),
 				'identity'     => __( 'Identity', 'postwave' ),
 				'recipient'    => __( 'Recipient', 'postwave' ),
@@ -125,6 +133,8 @@ class Postwave_Admin {
 		$tab         = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general';
 		$is_setup    = empty( $options['server_url'] ) && ! isset( $_GET['skip'] );
 		$retry_count = Postwave_Retry_Queue::get_count();
+		$accounts    = Postwave_Account_Manager::get_all();
+		$rules       = Postwave_Router::get_rules();
 
 		include POSTWAVE_PLUGIN_DIR . 'templates/page-settings.php';
 	}
@@ -245,6 +255,170 @@ class Postwave_Admin {
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $csv;
 		exit;
+	}
+
+	// ── v1.2: Accounts ───────────────────────────────────────────────────────
+
+	public function save_account() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_save_account' );
+
+		$in = isset( $_POST['pw_account'] ) ? $_POST['pw_account'] : array();
+
+		$data = array(
+			'id'             => sanitize_key( isset( $in['id'] ) ? $in['id'] : '' ),
+			'name'           => sanitize_text_field( isset( $in['name'] ) ? $in['name'] : '' ),
+			'server_url'     => esc_url_raw( trim( isset( $in['server_url'] ) ? $in['server_url'] : '' ) ),
+			'username'       => sanitize_text_field( isset( $in['username'] ) ? $in['username'] : '' ),
+			'password'       => isset( $in['password'] ) ? $in['password'] : '', // preserved if empty in Account_Manager::save()
+			'identity_id'    => sanitize_text_field( isset( $in['identity_id'] )    ? $in['identity_id']    : '' ),
+			'identity_name'  => sanitize_text_field( isset( $in['identity_name'] )  ? $in['identity_name']  : '' ),
+			'identity_email' => sanitize_email(      isset( $in['identity_email'] ) ? $in['identity_email'] : '' ),
+			'is_primary'     => ( sanitize_key( isset( $in['id'] ) ? $in['id'] : '' ) === 'acc_primary' ),
+		);
+
+		$account_id = Postwave_Account_Manager::save( $data );
+
+		// If saving the primary account, sync back to postwave_settings for compat.
+		if ( 'acc_primary' === $account_id ) {
+			Postwave_Account_Manager::sync_primary_to_settings();
+		}
+
+		wp_safe_redirect( add_query_arg(
+			array( 'page' => 'postwave', 'tab' => 'accounts', 'saved' => '1' ),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
+	public function delete_account() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_delete_account' );
+
+		$id = sanitize_key( isset( $_POST['account_id'] ) ? $_POST['account_id'] : '' );
+
+		if ( 'acc_primary' === $id ) {
+			wp_die( esc_html__( 'The primary account cannot be deleted.', 'postwave' ) );
+		}
+
+		Postwave_Account_Manager::delete( $id );
+
+		wp_safe_redirect( add_query_arg(
+			array( 'page' => 'postwave', 'tab' => 'accounts', 'deleted' => '1' ),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
+	// ── v1.2: Routing ────────────────────────────────────────────────────────
+
+	public function save_rule() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_save_rule' );
+
+		$in = isset( $_POST['pw_rule'] ) ? $_POST['pw_rule'] : array();
+
+		// Parse conditions from flat POST arrays.
+		$condition_fields = array_values( (array) ( isset( $in['condition_field'] ) ? $in['condition_field'] : array() ) );
+		$condition_values = array_values( (array) ( isset( $in['condition_value'] ) ? $in['condition_value'] : array() ) );
+		$conditions       = array();
+		foreach ( $condition_fields as $i => $field ) {
+			$field = sanitize_key( $field );
+			$value = sanitize_text_field( isset( $condition_values[ $i ] ) ? $condition_values[ $i ] : '' );
+			if ( $field && '' !== $value ) {
+				$conditions[] = array( 'field' => $field, 'value' => $value );
+			}
+		}
+
+		$data = array(
+			'id'                 => sanitize_key( isset( $in['id'] ) ? $in['id'] : '' ),
+			'name'               => sanitize_text_field( isset( $in['name'] ) ? $in['name'] : '' ),
+			'enabled'            => ! empty( $in['enabled'] ),
+			'conditions'         => $conditions,
+			'condition_operator' => sanitize_key( isset( $in['condition_operator'] ) ? $in['condition_operator'] : 'any' ),
+			'account_id'         => sanitize_key( isset( $in['account_id'] ) ? $in['account_id'] : 'acc_primary' ),
+			'identity_id'        => sanitize_text_field( isset( $in['identity_id'] ) ? $in['identity_id'] : '' ),
+		);
+
+		Postwave_Router::save_rule( $data );
+
+		wp_safe_redirect( add_query_arg(
+			array( 'page' => 'postwave', 'tab' => 'routing', 'saved' => '1' ),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
+	public function delete_rule() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_delete_rule' );
+
+		$id = sanitize_key( isset( $_POST['rule_id'] ) ? $_POST['rule_id'] : '' );
+		Postwave_Router::delete_rule( $id );
+
+		wp_safe_redirect( add_query_arg(
+			array( 'page' => 'postwave', 'tab' => 'routing', 'deleted' => '1' ),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
+	public function reorder_rules() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Permission denied.', 'postwave' ) );
+		}
+		check_admin_referer( 'postwave_reorder_rules' );
+
+		$ids = array_map( 'sanitize_key', (array) ( isset( $_POST['order'] ) ? $_POST['order'] : array() ) );
+		Postwave_Router::reorder_rules( $ids );
+
+		wp_safe_redirect( add_query_arg(
+			array( 'page' => 'postwave', 'tab' => 'routing' ),
+			admin_url( 'admin.php' )
+		) );
+		exit;
+	}
+
+	public function ajax_test_account() {
+		check_ajax_referer( 'postwave_test_account', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'postwave' ) ) );
+		}
+
+		$account_id = sanitize_key( isset( $_POST['account_id'] ) ? $_POST['account_id'] : '' );
+		$account    = Postwave_Account_Manager::get( $account_id );
+
+		if ( ! $account ) {
+			wp_send_json_error( array( 'message' => __( 'Account not found.', 'postwave' ) ) );
+		}
+
+		$client = new Postwave_JMAP_Client( $account['server_url'], $account['username'], $account['password'] );
+		$result = $client->discover_session();
+
+		$ok = ! is_wp_error( $result );
+		Postwave_Account_Manager::set_test_result( $account_id, $ok );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		$session      = $client->get_session();
+		$capabilities = array_keys( isset( $session['capabilities'] ) ? $session['capabilities'] : array() );
+
+		wp_send_json_success( array(
+			'message'      => __( 'Connection successful!', 'postwave' ),
+			'capabilities' => count( $capabilities ),
+			'account_id'   => $client->get_account_id(),
+		) );
 	}
 
 	/**

@@ -384,6 +384,239 @@
     var emailBtn = $('#pw-test-email');
     if (connBtn)  connBtn.addEventListener('click',  function () { runTest('connection'); });
     if (emailBtn) emailBtn.addEventListener('click', function () { runTest('email'); });
+
+    initAccountManager();
+    initRoutingUI();
   });
+
+  // ── v1.2: Account manager UI ─────────────────────────────────────────────
+
+  function initAccountManager() {
+    var addBtn    = document.getElementById( 'pw-add-account-btn' );
+    var form      = document.getElementById( 'pw-account-form' );
+    var cancelBtn = document.getElementById( 'pw-account-form-cancel' );
+    var idField   = document.getElementById( 'pw-account-id' );
+    var formTitle = document.getElementById( 'pw-account-form-title' );
+    if ( ! addBtn || ! form ) return;
+
+    addBtn.addEventListener( 'click', function () {
+      // Reset form to "add new" state.
+      if ( idField )   idField.value = '';
+      if ( formTitle ) formTitle.textContent = 'Add account';
+      // Clear all inputs.
+      form.querySelectorAll( 'input[type=text], input[type=url], input[type=password]' ).forEach( function ( el ) {
+        el.value = '';
+      } );
+      form.classList.remove( 'pw-hidden' );
+      form.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+    } );
+
+    if ( cancelBtn ) {
+      cancelBtn.addEventListener( 'click', function () {
+        form.classList.add( 'pw-hidden' );
+      } );
+    }
+
+    // Edit buttons on account cards.
+    document.querySelectorAll( '.pw-edit-account-btn' ).forEach( function ( btn ) {
+      btn.addEventListener( 'click', function () {
+        var card = btn.closest( '.pw-account-card' );
+        if ( ! card ) return;
+        var data = JSON.parse( card.dataset.account || '{}' );
+
+        if ( idField )   idField.value = data.id || '';
+        if ( formTitle ) formTitle.textContent = 'Edit account';
+
+        var fields = {
+          'pw-account-name':       data.name           || '',
+          'pw-account-server-url': data.server_url     || '',
+          'pw-account-username':   data.username       || '',
+          'pw-account-iname':      data.identity_name  || '',
+          'pw-account-iemail':     data.identity_email || '',
+          'pw-account-iid':        data.identity_id    || '',
+        };
+        Object.keys( fields ).forEach( function ( id ) {
+          var el = document.getElementById( id );
+          if ( el ) el.value = fields[ id ];
+        } );
+
+        // Always clear password when editing.
+        var pwEl = document.getElementById( 'pw-account-password' );
+        if ( pwEl ) pwEl.value = '';
+
+        form.classList.remove( 'pw-hidden' );
+        form.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+      } );
+    } );
+
+    // Test account button (AJAX).
+    var testBtn    = document.getElementById( 'pw-test-account-btn' );
+    var testResult = document.getElementById( 'pw-test-account-result' );
+    if ( testBtn ) {
+      testBtn.addEventListener( 'click', function () {
+        var accountId = ( idField && idField.value ) ? idField.value : 'acc_primary';
+        testBtn.disabled    = true;
+        testBtn.textContent = 'Testing…';
+        if ( testResult ) testResult.textContent = '';
+
+        var fd = new FormData();
+        fd.append( 'action',     'postwave_test_account' );
+        fd.append( 'nonce',      cfg.test_account_nonce || '' );
+        fd.append( 'account_id', accountId );
+
+        fetch( cfg.ajax_url, { method: 'POST', body: fd, credentials: 'same-origin' } )
+          .then( function ( r ) { return r.json(); } )
+          .then( function ( data ) {
+            testBtn.disabled    = false;
+            testBtn.textContent = 'Test connection';
+            if ( testResult ) {
+              testResult.textContent = data.success
+                ? '✓ ' + ( data.data.message || 'OK' )
+                : '✗ ' + ( ( data.data && data.data.message ) || 'Failed' );
+              testResult.style.color = data.success ? '#00a32a' : '#d63638';
+            }
+          } )
+          .catch( function () {
+            testBtn.disabled    = false;
+            testBtn.textContent = 'Test connection';
+            if ( testResult ) { testResult.textContent = '✗ Request failed'; testResult.style.color = '#d63638'; }
+          } );
+      } );
+    }
+  }
+
+  // ── v1.2: Routing rules UI ────────────────────────────────────────────────
+
+  function initRoutingUI() {
+    var addBtn      = document.getElementById( 'pw-add-rule-btn' );
+    var ruleForm    = document.getElementById( 'pw-rule-form' );
+    var cancelBtn   = document.getElementById( 'pw-rule-form-cancel' );
+    var ruleIdField = document.getElementById( 'pw-rule-id' );
+    var ruleTitle   = document.getElementById( 'pw-rule-form-title' );
+
+    if ( addBtn && ruleForm ) {
+      addBtn.addEventListener( 'click', function () {
+        if ( ruleIdField ) ruleIdField.value = '';
+        if ( ruleTitle )   ruleTitle.textContent = 'Add rule';
+        // Reset form fields.
+        ruleForm.querySelectorAll( 'input[type=text], input[type=checkbox]' ).forEach( function ( el ) {
+          if ( el.type === 'checkbox' ) el.checked = true;
+          else el.value = '';
+        } );
+        // Clear conditions (keep one empty row).
+        var list = document.getElementById( 'pw-conditions-list' );
+        if ( list ) {
+          list.innerHTML = '';
+          addConditionRow( list );
+        }
+        ruleForm.classList.remove( 'pw-hidden' );
+        ruleForm.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+      } );
+    }
+
+    if ( cancelBtn && ruleForm ) {
+      cancelBtn.addEventListener( 'click', function () {
+        ruleForm.classList.add( 'pw-hidden' );
+      } );
+    }
+
+    // Add condition row button.
+    var addConditionBtn = document.getElementById( 'pw-add-condition-btn' );
+    var conditionsList  = document.getElementById( 'pw-conditions-list' );
+    if ( addConditionBtn && conditionsList ) {
+      addConditionBtn.addEventListener( 'click', function () {
+        addConditionRow( conditionsList );
+      } );
+    }
+
+    // Edit rule buttons.
+    document.querySelectorAll( '.pw-edit-rule-btn' ).forEach( function ( btn ) {
+      btn.addEventListener( 'click', function () {
+        var data = JSON.parse( btn.dataset.rule || '{}' );
+        if ( ruleIdField ) ruleIdField.value = data.id || '';
+        if ( ruleTitle )   ruleTitle.textContent = 'Edit rule';
+
+        var nameEl = document.getElementById( 'pw-rule-name' );
+        if ( nameEl ) nameEl.value = data.name || '';
+
+        var enabledEl = document.getElementById( 'pw-rule-enabled' );
+        if ( enabledEl ) enabledEl.checked = !! data.enabled;
+
+        var opAny = document.querySelector( '[name="pw_rule[condition_operator]"][value="any"]' );
+        var opAll = document.querySelector( '[name="pw_rule[condition_operator]"][value="all"]' );
+        if ( opAny ) opAny.checked = ( data.condition_operator !== 'all' );
+        if ( opAll ) opAll.checked = ( data.condition_operator === 'all' );
+
+        var accountSel = document.getElementById( 'pw-rule-account' );
+        if ( accountSel ) accountSel.value = data.account_id || 'acc_primary';
+
+        var identityEl = document.getElementById( 'pw-rule-identity' );
+        if ( identityEl ) identityEl.value = data.identity_id || '';
+
+        // Populate conditions.
+        var list = document.getElementById( 'pw-conditions-list' );
+        if ( list ) {
+          list.innerHTML = '';
+          var conditions = data.conditions || [];
+          if ( conditions.length === 0 ) {
+            addConditionRow( list );
+          } else {
+            conditions.forEach( function ( c ) {
+              addConditionRow( list, c.field, c.value );
+            } );
+          }
+        }
+
+        if ( ruleForm ) {
+          ruleForm.classList.remove( 'pw-hidden' );
+          ruleForm.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+        }
+      } );
+    } );
+  }
+
+  function addConditionRow( list, field, value ) {
+    var row = document.createElement( 'div' );
+    row.className = 'pw-condition-row';
+
+    var fieldOpts = [
+      { value: 'to_domain',        label: 'Recipient domain (e.g. example.com)' },
+      { value: 'to_email',         label: 'Recipient email (exact)' },
+      { value: 'from_email',       label: 'Sender email (exact)' },
+      { value: 'subject_contains', label: 'Subject contains' },
+      { value: 'plugin',           label: 'Plugin / email type' },
+    ];
+
+    var sel = document.createElement( 'select' );
+    sel.name = 'pw_rule[condition_field][]';
+    sel.innerHTML = '<option value="">— Select field —</option>';
+    fieldOpts.forEach( function ( opt ) {
+      var o = document.createElement( 'option' );
+      o.value = opt.value;
+      o.text  = opt.label;
+      if ( opt.value === field ) o.selected = true;
+      sel.appendChild( o );
+    } );
+
+    var inp = document.createElement( 'input' );
+    inp.type        = 'text';
+    inp.name        = 'pw_rule[condition_value][]';
+    inp.value       = value || '';
+    inp.placeholder = 'Value';
+
+    var rm = document.createElement( 'button' );
+    rm.type      = 'button';
+    rm.className = 'pw-remove-condition';
+    rm.textContent = '×';
+    rm.title     = 'Remove';
+    rm.addEventListener( 'click', function () {
+      row.remove();
+    } );
+
+    row.appendChild( sel );
+    row.appendChild( inp );
+    row.appendChild( rm );
+    list.appendChild( row );
+  }
 
 })();

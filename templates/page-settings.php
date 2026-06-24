@@ -7,8 +7,8 @@
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-$o   = fn( $k, $d = '' ) => $options[ $k ] ?? $d;
-$url = fn( array $args ) => esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+$o   = function( $k, $d = '' ) use ( $options ) { return isset( $options[ $k ] ) ? $options[ $k ] : $d; };
+$url = function( array $args ) { return esc_url( add_query_arg( $args, admin_url( 'admin.php' ) ) ); };
 $act = esc_url( admin_url( 'admin-post.php' ) );
 
 $configured = ! empty( $options['server_url'] ) && ! empty( $options['username'] ) && ! empty( $options['password'] );
@@ -207,24 +207,37 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
 
   <?php
   /* ── Tab meta ── */
-  $tab_meta = [
-    'general'    => [
+  $icon_accounts = '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>';
+  $icon_routing  = '<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
+
+  $tab_meta = array(
+    'general'    => array(
       'label' => __( 'General', 'postwave' ),
       'desc'  => __( 'Enable Postwave JMAP and configure sender information.', 'postwave' ),
       'icon'  => $icon_general,
-    ],
-    'connection' => [
+    ),
+    'accounts'   => array(
+      'label' => __( 'Accounts', 'postwave' ),
+      'desc'  => __( 'Configure multiple JMAP accounts for routing.', 'postwave' ),
+      'icon'  => $icon_accounts,
+    ),
+    'routing'    => array(
+      'label' => __( 'Routing', 'postwave' ),
+      'desc'  => __( 'Route emails to specific accounts based on conditions.', 'postwave' ),
+      'icon'  => $icon_routing,
+    ),
+    'connection' => array(
       'label' => __( 'Connection', 'postwave' ),
       'desc'  => __( 'JMAP server credentials and connection testing.', 'postwave' ),
       'icon'  => $icon_connection,
-    ],
-    'log'        => [
+    ),
+    'log'        => array(
       'label' => __( 'Mail Log', 'postwave' ),
       'desc'  => __( 'Last 100 send attempts. Message bodies are never stored.', 'postwave' ),
       'icon'  => $icon_log,
-    ],
-  ];
-  $current_meta = $tab_meta[ $tab ] ?? $tab_meta['general'];
+    ),
+  );
+  $current_meta = isset( $tab_meta[ $tab ] ) ? $tab_meta[ $tab ] : $tab_meta['general'];
   ?>
 
   <!-- ── App Header ── -->
@@ -254,9 +267,16 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
     <div class="pw-app-nav-inner">
       <?php foreach ( $tab_meta as $key => $meta ) :
         $is_active = $tab === $key;
-        $count = ( $key === 'log' && $stats['total'] > 0 ) ? '<span class="pw-nav-count">' . intval( $stats['total'] ) . '</span>' : '';
+        $count = '';
+        if ( 'log' === $key && $stats['total'] > 0 ) {
+          $count = '<span class="pw-nav-count">' . intval( $stats['total'] ) . '</span>';
+        } elseif ( 'accounts' === $key && count( $accounts ) > 1 ) {
+          $count = '<span class="pw-nav-count">' . count( $accounts ) . '</span>';
+        } elseif ( 'routing' === $key && count( $rules ) > 0 ) {
+          $count = '<span class="pw-nav-count">' . count( $rules ) . '</span>';
+        }
       ?>
-      <a href="<?php echo $url( [ 'page' => 'postwave', 'tab' => $key ] ); ?>"
+      <a href="<?php echo $url( array( 'page' => 'postwave', 'tab' => $key ) ); ?>"
          class="pw-nav-item<?php echo $is_active ? ' pw-nav-item-active' : ''; ?>">
         <?php echo $meta['icon']; ?>
         <span><?php echo esc_html( $meta['label'] ); ?></span>
@@ -458,6 +478,312 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
         </div>
 
       </form>
+
+      <!-- ══ TAB: ACCOUNTS ══ -->
+      <?php elseif ( $tab === 'accounts' ) : ?>
+
+      <?php if ( isset( $_GET['deleted'] ) ) : ?>
+      <div class="pw-notice pw-notice-success">
+        <?php echo $icon_check; ?>
+        <?php esc_html_e( 'Account deleted.', 'postwave' ); ?>
+      </div>
+      <?php endif; ?>
+
+      <!-- Account cards grid -->
+      <div class="pw-account-grid">
+        <?php foreach ( $accounts as $acct ) :
+          $status_class = is_null( $acct['last_test_ok'] ) ? 'pw-status-dot--none' : ( $acct['last_test_ok'] ? 'pw-status-dot--ok' : 'pw-status-dot--fail' );
+          $acct_json    = esc_attr( wp_json_encode( array(
+            'id'             => $acct['id'],
+            'name'           => $acct['name'],
+            'server_url'     => $acct['server_url'],
+            'username'       => $acct['username'],
+            'identity_id'    => $acct['identity_id'],
+            'identity_name'  => $acct['identity_name'],
+            'identity_email' => $acct['identity_email'],
+          ) ) );
+        ?>
+        <div class="pw-account-card" data-account="<?php echo $acct_json; ?>">
+          <div class="pw-account-card-header">
+            <span class="pw-status-dot <?php echo esc_attr( $status_class ); ?>"></span>
+            <span class="pw-account-name"><?php echo esc_html( $acct['name'] ); ?></span>
+            <?php if ( ! empty( $acct['is_primary'] ) ) : ?>
+            <span class="pw-badge--primary"><?php esc_html_e( 'Primary', 'postwave' ); ?></span>
+            <?php endif; ?>
+          </div>
+          <div class="pw-account-url"><?php echo esc_html( $acct['server_url'] ? $acct['server_url'] : __( '(no URL set)', 'postwave' ) ); ?></div>
+          <div class="pw-account-actions">
+            <button type="button" class="pw-btn pw-btn-secondary pw-btn--sm pw-edit-account-btn">
+              <?php esc_html_e( 'Edit', 'postwave' ); ?>
+            </button>
+            <?php if ( empty( $acct['is_primary'] ) ) : ?>
+            <form method="post" action="<?php echo $act; ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this account?', 'postwave' ) ); ?>')">
+              <?php wp_nonce_field( 'postwave_delete_account' ); ?>
+              <input type="hidden" name="action"     value="postwave_delete_account">
+              <input type="hidden" name="account_id" value="<?php echo esc_attr( $acct['id'] ); ?>">
+              <button type="submit" class="pw-btn pw-btn-danger pw-btn--sm"><?php esc_html_e( 'Delete', 'postwave' ); ?></button>
+            </form>
+            <?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+
+      <!-- Add account button -->
+      <div style="margin-bottom:20px;">
+        <button type="button" class="pw-btn pw-btn-primary" id="pw-add-account-btn">
+          + <?php esc_html_e( 'Add account', 'postwave' ); ?>
+        </button>
+      </div>
+
+      <!-- Add / Edit account inline form -->
+      <div class="pw-inline-form pw-hidden" id="pw-account-form">
+        <h3 id="pw-account-form-title"><?php esc_html_e( 'Add account', 'postwave' ); ?></h3>
+        <form method="post" action="<?php echo $act; ?>">
+          <?php wp_nonce_field( 'postwave_save_account' ); ?>
+          <input type="hidden" name="action"        value="postwave_save_account">
+          <input type="hidden" name="pw_account[id]" id="pw-account-id" value="">
+
+          <div class="pw-form-grid-2">
+            <div class="pw-field">
+              <label for="pw-account-name"><?php esc_html_e( 'Account name', 'postwave' ); ?></label>
+              <input type="text" id="pw-account-name" class="pw-input" name="pw_account[name]" placeholder="<?php esc_attr_e( 'e.g. Primary', 'postwave' ); ?>">
+            </div>
+            <div class="pw-field">
+              <label for="pw-account-server-url"><?php esc_html_e( 'Server URL', 'postwave' ); ?></label>
+              <input type="url" id="pw-account-server-url" class="pw-input" name="pw_account[server_url]" placeholder="https://mail.example.com">
+            </div>
+            <div class="pw-field">
+              <label for="pw-account-username"><?php esc_html_e( 'Username', 'postwave' ); ?></label>
+              <input type="text" id="pw-account-username" class="pw-input" name="pw_account[username]" autocomplete="off">
+            </div>
+            <div class="pw-field">
+              <label for="pw-account-password"><?php esc_html_e( 'Password', 'postwave' ); ?></label>
+              <div class="pw-pass-wrap">
+                <input type="password" id="pw-account-password" class="pw-input" name="pw_account[password]"
+                  placeholder="<?php esc_attr_e( 'Leave blank to keep current', 'postwave' ); ?>" autocomplete="new-password">
+                <button type="button" class="pw-eye-btn" data-for="pw-account-password" tabindex="-1"
+                  aria-label="<?php esc_attr_e( 'Toggle password visibility', 'postwave' ); ?>">
+                  <svg class="pw-eye-on"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  <svg class="pw-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <details style="margin-top:12px;">
+            <summary style="cursor:pointer;font-size:12px;color:var(--pw-muted,#787c82);margin-bottom:8px;"><?php esc_html_e( 'Identity override (advanced)', 'postwave' ); ?></summary>
+            <div class="pw-form-grid-2" style="margin-top:8px;">
+              <div class="pw-field">
+                <label for="pw-account-iid"><?php esc_html_e( 'Identity ID', 'postwave' ); ?></label>
+                <input type="text" id="pw-account-iid" class="pw-input" name="pw_account[identity_id]" placeholder="<?php esc_attr_e( 'Leave blank for auto-resolve', 'postwave' ); ?>">
+              </div>
+              <div class="pw-field">
+                <label for="pw-account-iname"><?php esc_html_e( 'Identity name', 'postwave' ); ?></label>
+                <input type="text" id="pw-account-iname" class="pw-input" name="pw_account[identity_name]">
+              </div>
+              <div class="pw-field">
+                <label for="pw-account-iemail"><?php esc_html_e( 'Identity email', 'postwave' ); ?></label>
+                <input type="email" id="pw-account-iemail" class="pw-input" name="pw_account[identity_email]">
+              </div>
+            </div>
+          </details>
+
+          <div class="pw-form-actions">
+            <button type="submit" class="pw-btn pw-btn-primary"><?php esc_html_e( 'Save account', 'postwave' ); ?></button>
+            <button type="button" class="pw-btn pw-btn-outline" id="pw-account-form-cancel"><?php esc_html_e( 'Cancel', 'postwave' ); ?></button>
+            <button type="button" class="pw-btn pw-btn-secondary" id="pw-test-account-btn"><?php esc_html_e( 'Test connection', 'postwave' ); ?></button>
+            <span id="pw-test-account-result" style="font-size:13px;"></span>
+          </div>
+        </form>
+      </div>
+
+      <!-- ══ TAB: ROUTING ══ -->
+      <?php elseif ( $tab === 'routing' ) : ?>
+
+      <p style="font-size:13px;color:var(--pw-muted,#787c82);margin-bottom:20px;">
+        <?php esc_html_e( 'Routing rules are evaluated in order (first match wins). Each rule sends matching emails via the specified account. Rules are skipped if disabled or if their conditions do not match.', 'postwave' ); ?>
+      </p>
+
+      <!-- Rules table -->
+      <?php if ( ! empty( $rules ) ) : ?>
+      <div class="pw-panel" style="margin-bottom:20px;">
+        <div class="pw-panel-body pw-panel-body-flush">
+          <table class="pw-rules-table">
+            <thead>
+              <tr>
+                <th><?php esc_html_e( 'Priority', 'postwave' ); ?></th>
+                <th><?php esc_html_e( 'Rule name', 'postwave' ); ?></th>
+                <th><?php esc_html_e( 'Conditions', 'postwave' ); ?></th>
+                <th><?php esc_html_e( 'Account', 'postwave' ); ?></th>
+                <th><?php esc_html_e( 'Enabled', 'postwave' ); ?></th>
+                <th><?php esc_html_e( 'Actions', 'postwave' ); ?></th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ( $rules as $ri => $rule ) :
+                $acct_name = '';
+                if ( ! empty( $rule['account_id'] ) ) {
+                  $racct     = Postwave_Account_Manager::get( $rule['account_id'] );
+                  $acct_name = $racct ? esc_html( $racct['name'] ) : esc_html( $rule['account_id'] );
+                }
+                $cond_summary = array();
+                foreach ( (array) ( isset( $rule['conditions'] ) ? $rule['conditions'] : array() ) as $cond ) {
+                  $cond_summary[] = '<code>' . esc_html( $cond['field'] ) . '</code>: ' . esc_html( $cond['value'] );
+                }
+                $rule_json = esc_attr( wp_json_encode( $rule ) );
+              ?>
+              <tr>
+                <td>
+                  <div class="pw-priority-btns">
+                    <?php if ( $ri > 0 ) : ?>
+                    <form method="post" action="<?php echo $act; ?>" style="display:inline">
+                      <?php wp_nonce_field( 'postwave_reorder_rules' ); ?>
+                      <input type="hidden" name="action" value="postwave_reorder_rules">
+                      <?php
+                      $new_order = array_column( $rules, 'id' );
+                      $tmp = $new_order[ $ri ]; $new_order[ $ri ] = $new_order[ $ri - 1 ]; $new_order[ $ri - 1 ] = $tmp;
+                      foreach ( $new_order as $oid ) :
+                      ?>
+                      <input type="hidden" name="order[]" value="<?php echo esc_attr( $oid ); ?>">
+                      <?php endforeach; ?>
+                      <button type="submit" title="<?php esc_attr_e( 'Move up', 'postwave' ); ?>">↑</button>
+                    </form>
+                    <?php else : ?>
+                    <button type="button" disabled>↑</button>
+                    <?php endif; ?>
+                    <?php if ( $ri < count( $rules ) - 1 ) : ?>
+                    <form method="post" action="<?php echo $act; ?>" style="display:inline">
+                      <?php wp_nonce_field( 'postwave_reorder_rules' ); ?>
+                      <input type="hidden" name="action" value="postwave_reorder_rules">
+                      <?php
+                      $new_order = array_column( $rules, 'id' );
+                      $tmp = $new_order[ $ri ]; $new_order[ $ri ] = $new_order[ $ri + 1 ]; $new_order[ $ri + 1 ] = $tmp;
+                      foreach ( $new_order as $oid ) :
+                      ?>
+                      <input type="hidden" name="order[]" value="<?php echo esc_attr( $oid ); ?>">
+                      <?php endforeach; ?>
+                      <button type="submit" title="<?php esc_attr_e( 'Move down', 'postwave' ); ?>">↓</button>
+                    </form>
+                    <?php else : ?>
+                    <button type="button" disabled>↓</button>
+                    <?php endif; ?>
+                  </div>
+                </td>
+                <td><?php echo esc_html( isset( $rule['name'] ) ? $rule['name'] : '' ); ?></td>
+                <td class="pw-rule-conditions">
+                  <?php if ( ! empty( $cond_summary ) ) : ?>
+                  <?php echo implode( ' <em>' . esc_html( isset( $rule['condition_operator'] ) && 'all' === $rule['condition_operator'] ? __( 'AND', 'postwave' ) : __( 'OR', 'postwave' ) ) . '</em> ', $cond_summary ); ?>
+                  <?php else : ?>
+                  <em><?php esc_html_e( 'All emails', 'postwave' ); ?></em>
+                  <?php endif; ?>
+                </td>
+                <td><?php echo $acct_name; ?></td>
+                <td>
+                  <?php if ( ! empty( $rule['enabled'] ) ) : ?>
+                  <span class="pw-badge--primary"><?php esc_html_e( 'Yes', 'postwave' ); ?></span>
+                  <?php else : ?>
+                  <span style="color:var(--pw-muted,#787c82);font-size:12px;"><?php esc_html_e( 'No', 'postwave' ); ?></span>
+                  <?php endif; ?>
+                </td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button type="button" class="pw-btn pw-btn-secondary pw-btn--sm pw-edit-rule-btn" data-rule="<?php echo $rule_json; ?>">
+                      <?php esc_html_e( 'Edit', 'postwave' ); ?>
+                    </button>
+                    <form method="post" action="<?php echo $act; ?>" style="display:inline;" onsubmit="return confirm('<?php echo esc_js( __( 'Delete this rule?', 'postwave' ) ); ?>')">
+                      <?php wp_nonce_field( 'postwave_delete_rule' ); ?>
+                      <input type="hidden" name="action"  value="postwave_delete_rule">
+                      <input type="hidden" name="rule_id" value="<?php echo esc_attr( $rule['id'] ); ?>">
+                      <button type="submit" class="pw-btn pw-btn-danger pw-btn--sm"><?php esc_html_e( 'Delete', 'postwave' ); ?></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <!-- Add rule button -->
+      <div style="margin-bottom:20px;">
+        <button type="button" class="pw-btn pw-btn-primary" id="pw-add-rule-btn">
+          + <?php esc_html_e( 'Add rule', 'postwave' ); ?>
+        </button>
+      </div>
+
+      <!-- Add / Edit rule inline form -->
+      <div class="pw-inline-form pw-hidden" id="pw-rule-form">
+        <h3 id="pw-rule-form-title"><?php esc_html_e( 'Add rule', 'postwave' ); ?></h3>
+        <form method="post" action="<?php echo $act; ?>">
+          <?php wp_nonce_field( 'postwave_save_rule' ); ?>
+          <input type="hidden" name="action"       value="postwave_save_rule">
+          <input type="hidden" name="pw_rule[id]"   id="pw-rule-id" value="">
+
+          <div class="pw-form-grid-2">
+            <div class="pw-field">
+              <label for="pw-rule-name"><?php esc_html_e( 'Rule name', 'postwave' ); ?></label>
+              <input type="text" id="pw-rule-name" class="pw-input" name="pw_rule[name]" placeholder="<?php esc_attr_e( 'e.g. WooCommerce Orders', 'postwave' ); ?>">
+            </div>
+            <div class="pw-field" style="display:flex;align-items:center;gap:10px;padding-top:22px;">
+              <label class="pw-toggle" style="flex-shrink:0;">
+                <input type="checkbox" name="pw_rule[enabled]" id="pw-rule-enabled" value="1" checked class="pw-toggle-cb">
+                <span class="pw-toggle-track"><span class="pw-toggle-thumb"></span></span>
+              </label>
+              <span style="font-size:13px;color:var(--pw-text,#2c3338);"><?php esc_html_e( 'Enabled', 'postwave' ); ?></span>
+            </div>
+          </div>
+
+          <!-- Condition operator -->
+          <div class="pw-field" style="margin-top:16px;">
+            <label><?php esc_html_e( 'Match operator', 'postwave' ); ?></label>
+            <div style="display:flex;gap:20px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="radio" name="pw_rule[condition_operator]" value="any" checked>
+                <?php esc_html_e( 'Match ANY condition', 'postwave' ); ?>
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="radio" name="pw_rule[condition_operator]" value="all">
+                <?php esc_html_e( 'Match ALL conditions', 'postwave' ); ?>
+              </label>
+            </div>
+          </div>
+
+          <!-- Conditions -->
+          <div class="pw-field" style="margin-top:16px;">
+            <label><?php esc_html_e( 'Conditions', 'postwave' ); ?></label>
+            <div class="pw-conditions-list" id="pw-conditions-list" style="margin-top:8px;"></div>
+            <button type="button" class="pw-add-condition" id="pw-add-condition-btn">+ <?php esc_html_e( 'Add condition', 'postwave' ); ?></button>
+            <p class="pw-desc" style="margin-top:6px;">
+              <?php esc_html_e( 'Plugin values: ', 'postwave' ); ?>
+              <code>woocommerce</code>, <code>woocommerce:customer_processing_order</code>, <code>gravityforms</code>, <code>fluentform</code>, <code>cf7</code>
+            </p>
+          </div>
+
+          <!-- Target account -->
+          <div class="pw-form-grid-2" style="margin-top:16px;">
+            <div class="pw-field">
+              <label for="pw-rule-account"><?php esc_html_e( 'Target account', 'postwave' ); ?></label>
+              <select id="pw-rule-account" name="pw_rule[account_id]" class="pw-select">
+                <?php foreach ( $accounts as $racct ) : ?>
+                <option value="<?php echo esc_attr( $racct['id'] ); ?>"><?php echo esc_html( $racct['name'] ); ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="pw-field">
+              <label for="pw-rule-identity"><?php esc_html_e( 'Override identity ID', 'postwave' ); ?> <em class="pw-label-opt"><?php esc_html_e( 'optional', 'postwave' ); ?></em></label>
+              <input type="text" id="pw-rule-identity" class="pw-input" name="pw_rule[identity_id]" placeholder="<?php esc_attr_e( 'Leave blank to use account default', 'postwave' ); ?>">
+            </div>
+          </div>
+
+          <div class="pw-form-actions">
+            <button type="submit" class="pw-btn pw-btn-primary"><?php esc_html_e( 'Save rule', 'postwave' ); ?></button>
+            <button type="button" class="pw-btn pw-btn-outline" id="pw-rule-form-cancel"><?php esc_html_e( 'Cancel', 'postwave' ); ?></button>
+          </div>
+        </form>
+      </div>
 
       <!-- ══ TAB: CONNECTION ══ -->
       <?php elseif ( $tab === 'connection' ) : ?>
