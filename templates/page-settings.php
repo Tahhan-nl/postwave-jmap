@@ -70,7 +70,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
           </li>
         </ul>
         <div class="pw-wizard__actions">
-          <button type="button" class="pw-wizard__btn pw-wizard__btn--ghost" data-wizard-skip><?php esc_html_e( 'Skip for now', 'postwave' ); ?></button>
+          <a href="<?php echo esc_url( add_query_arg( 'skip_wizard', '1', admin_url( 'admin.php?page=postwave' ) ) ); ?>" class="pw-wizard__btn pw-wizard__btn--ghost"><?php esc_html_e( 'Skip for now', 'postwave' ); ?></a>
           <button type="button" class="pw-wizard__btn pw-wizard__btn--primary" data-wizard-next="1"><?php esc_html_e( 'Get Started', 'postwave' ); ?> &rarr;</button>
         </div>
       </div>
@@ -141,7 +141,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
           </ul>
         </div>
         <div class="pw-wizard__actions" style="justify-content:center;">
-          <button type="button" class="pw-wizard__btn pw-wizard__btn--primary" data-wizard-finish><?php esc_html_e( 'Go to Dashboard', 'postwave' ); ?></button>
+          <a href="<?php echo esc_url( add_query_arg( 'skip_wizard', '1', admin_url( 'admin.php?page=postwave' ) ) ); ?>" class="pw-wizard__btn pw-wizard__btn--primary"><?php esc_html_e( 'Go to Dashboard', 'postwave' ); ?></a>
         </div>
       </div>
 

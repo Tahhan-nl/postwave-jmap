@@ -75,6 +75,8 @@ class Postwave_Admin {
 			'identity_name'    => sanitize_text_field( $in['identity_name'] ?? '' ),
 			'identity_email'   => sanitize_email( $in['identity_email'] ?? '' ),
 			'tracking_enabled' => ! empty( $in['tracking_enabled'] ) ? 1 : 0,
+			// Preserve wizard dismissal flag; also mark dismissed when a server_url is saved.
+			'wizard_dismissed' => ! empty( $old['wizard_dismissed'] ) || ! empty( $in['server_url'] ) ? 1 : 0,
 		);
 
 		update_option( POSTWAVE_OPTION_KEY, $settings );
@@ -127,11 +129,18 @@ class Postwave_Admin {
 			return;
 		}
 
-		$options     = get_option( POSTWAVE_OPTION_KEY, array() );
+		$options = get_option( POSTWAVE_OPTION_KEY, array() );
+
+		// Persist wizard dismissal so it doesn't reappear on every page load.
+		if ( isset( $_GET['skip_wizard'] ) && '1' === $_GET['skip_wizard'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$options['wizard_dismissed'] = 1;
+			update_option( POSTWAVE_OPTION_KEY, $options );
+		}
+
 		$stats       = Postwave_Mail_Log::get_stats();
 		$entries     = Postwave_Mail_Log::get_entries();
 		$tab         = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'general'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$is_setup    = empty( $options['server_url'] ) && ! isset( $_GET['skip'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$is_setup    = empty( $options['server_url'] ) && empty( $options['wizard_dismissed'] );
 		$retry_count = Postwave_Retry_Queue::get_count();
 		$accounts    = Postwave_Account_Manager::get_all();
 		$rules       = Postwave_Router::get_rules();
