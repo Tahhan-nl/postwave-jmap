@@ -78,7 +78,7 @@ class Postwave_Router {
 
 		$rule = array(
 			'id'                 => $id,
-			'name'               => sanitize_text_field( isset( $data['name'] ) ? $data['name'] : __( 'Rule', 'postwave-jmap' ) ),
+			'name'               => sanitize_text_field( isset( $data['name'] ) ? $data['name'] : __( 'Rule', 'postwave' ) ),
 			'enabled'            => ! empty( $data['enabled'] ),
 			'conditions'         => $conditions,
 			'condition_operator' => $condition_operator,
