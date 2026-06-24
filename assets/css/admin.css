@@ -912,6 +912,12 @@ body.wp-admin #pw-page .pw-td-truncate {
   white-space: nowrap;
 }
 
+/* Detail cell — anchor for absolute panel */
+body.wp-admin #pw-page .pw-td-detail {
+  position: relative;
+  white-space: nowrap;
+}
+
 /* Detail toggle button */
 body.wp-admin #pw-page .pw-detail-btn {
   background: transparent !important;
@@ -937,11 +943,18 @@ body.wp-admin #pw-page .pw-detail-btn:hover {
 }
 
 body.wp-admin #pw-page .pw-detail-panel {
-  margin: 8px 0 0 !important;
-  padding: 10px 12px;
-  background: var(--pw-gray-50);
+  position: absolute !important;
+  right: 0;
+  top: 100%;
+  z-index: 200;
+  min-width: 340px;
+  max-width: 480px;
+  margin: 4px 0 0 !important;
+  padding: 10px 14px;
+  background: #fff;
   border: 1px solid var(--pw-gray-200);
   border-radius: var(--pw-radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,.12);
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 5px 12px;
@@ -964,8 +977,10 @@ body.wp-admin #pw-page .pw-detail-panel dt {
 
 body.wp-admin #pw-page .pw-detail-panel dd {
   margin: 0 !important;
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: anywhere;
   color: var(--pw-gray-800) !important;
+  min-width: 0;
 }
 
 body.wp-admin #pw-page .pw-detail-panel code {

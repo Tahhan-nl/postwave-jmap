@@ -3,7 +3,7 @@ Contributors: tahhan
 Tags: email, mail, jmap, smtp, transactional-email
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -113,6 +113,11 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 
 == Changelog ==
 
+= 1.3.2 =
+* Fixed: "No JMAP mailbox found with role sent" — the Sent mailbox is now optional; emails send successfully even when the server has no Sent folder with that role
+* Fixed: Mail log Details panel now pops up as an overlay instead of wrapping inside the narrow table column
+* Improved: Error and email addresses in the Details panel wrap cleanly without character-by-character breaks
+
 = 1.3.1 =
 * Fixed: Fatal syntax error in admin template (unexpected endif) preventing plugin from loading
 * Improved: Mail log now shows a dedicated "Opened" column with date/time instead of a small badge
@@ -155,6 +160,9 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 * Live connection testing (AJAX)
 
 == Upgrade Notice ==
+
+= 1.3.2 =
+Critical fix: emails were blocked when the JMAP server had no Sent mailbox with role "sent". Update immediately.
 
 = 1.3.1 =
 Bug fix: resolves a fatal syntax error that prevented the plugin from loading. Update immediately.

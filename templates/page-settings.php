@@ -1004,7 +1004,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
                     <span class="pw-opened-no" title="<?php esc_attr_e( 'Not yet opened, or open tracking is disabled', 'postwave' ); ?>">—</span>
                     <?php endif; ?>
                   </td>
-                  <td>
+                  <td class="pw-td-detail">
                     <button type="button" class="pw-detail-btn"><?php esc_html_e( 'Details', 'postwave' ); ?> ▾</button>
                     <dl class="pw-detail-panel" style="display:none">
                       <?php if ( ! empty( $e['from'] ) ) : ?>

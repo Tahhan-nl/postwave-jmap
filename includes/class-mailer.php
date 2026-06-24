@@ -119,10 +119,9 @@ class Postwave_Mailer {
 		$account_id        = $client->get_account_id();
 		$log['account_id'] = $account_id;
 
-		$sent_mailbox = $client->get_mailbox_id_by_role( 'sent' );
-		if ( is_wp_error( $sent_mailbox ) ) {
-			return $this->fail( $log, $sent_mailbox->get_error_message(), $atts, $is_retry, $log_id );
-		}
+		// Sent mailbox is optional — some servers use different roles or none at all.
+		$sent_mailbox_result = $client->get_mailbox_id_by_role( 'sent' );
+		$sent_mailbox        = is_wp_error( $sent_mailbox_result ) ? null : $sent_mailbox_result;
 
 		// Upload attachments.
 		$jmap_attachments = array();
@@ -167,12 +166,14 @@ class Postwave_Mailer {
 		}
 
 		$email = array(
-			'from'       => array( array( 'name' => $from_name, 'email' => $from_email ) ),
-			'to'         => $this->to_jmap( $to_list ),
-			'subject'    => $subject,
-			'keywords'   => array( '$seen' => true ),
-			'mailboxIds' => array( $sent_mailbox => true ),
+			'from'     => array( array( 'name' => $from_name, 'email' => $from_email ) ),
+			'to'       => $this->to_jmap( $to_list ),
+			'subject'  => $subject,
+			'keywords' => array( '$seen' => true ),
 		);
+		if ( $sent_mailbox ) {
+			$email['mailboxIds'] = array( $sent_mailbox => true );
+		}
 
 		if ( ! empty( $cc_list ) ) {
 			$email['cc'] = $this->to_jmap( $cc_list );
