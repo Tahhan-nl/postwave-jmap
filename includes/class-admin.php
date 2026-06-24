@@ -56,7 +56,7 @@ class Postwave_Admin {
 		check_admin_referer( 'postwave_save' );
 
 		$old = get_option( POSTWAVE_OPTION_KEY, array() );
-		$in  = isset( $_POST['postwave'] ) ? (array) wp_unslash( $_POST['postwave'] ) : array();
+		$in  = isset( $_POST['postwave'] ) ? (array) wp_unslash( $_POST['postwave'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each field sanitized individually below
 
 		$settings = array(
 			'enabled'          => ! empty( $in['enabled'] ) ? 1 : 0,
@@ -265,7 +265,7 @@ class Postwave_Admin {
 		}
 		check_admin_referer( 'postwave_save_account' );
 
-		$in = isset( $_POST['pw_account'] ) ? (array) wp_unslash( $_POST['pw_account'] ) : array();
+		$in = isset( $_POST['pw_account'] ) ? (array) wp_unslash( $_POST['pw_account'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each field sanitized individually below
 
 		$data = array(
 			'id'             => sanitize_key( isset( $in['id'] ) ? $in['id'] : '' ),
@@ -322,7 +322,7 @@ class Postwave_Admin {
 		}
 		check_admin_referer( 'postwave_save_rule' );
 
-		$in = isset( $_POST['pw_rule'] ) ? (array) wp_unslash( $_POST['pw_rule'] ) : array();
+		$in = isset( $_POST['pw_rule'] ) ? (array) wp_unslash( $_POST['pw_rule'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each field sanitized individually below
 
 		// Parse conditions from flat POST arrays.
 		$condition_fields = array_values( (array) ( isset( $in['condition_field'] ) ? $in['condition_field'] : array() ) );

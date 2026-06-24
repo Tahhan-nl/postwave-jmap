@@ -642,7 +642,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
                 <td><?php echo esc_html( isset( $rule['name'] ) ? $rule['name'] : '' ); ?></td>
                 <td class="pw-rule-conditions">
                   <?php if ( ! empty( $cond_summary ) ) : ?>
-                  <?php echo implode( ' <em>' . esc_html( isset( $rule['condition_operator'] ) && 'all' === $rule['condition_operator'] ? __( 'AND', 'postwave' ) : __( 'OR', 'postwave' ) ) . '</em> ', $cond_summary ); ?>
+                  <?php echo implode( ' <em>' . esc_html( isset( $rule['condition_operator'] ) && 'all' === $rule['condition_operator'] ? __( 'AND', 'postwave' ) : __( 'OR', 'postwave' ) ) . '</em> ', $cond_summary ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- array items built with esc_html() ?>
                   <?php else : ?>
                   <em><?php esc_html_e( 'All emails', 'postwave' ); ?></em>
                   <?php endif; ?>
