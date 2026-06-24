@@ -354,6 +354,43 @@ class Postwave_JMAP_Client {
 	}
 
 	/**
+	 * Get the best available mailbox ID for storing sent email.
+	 * Tries: sent → archive → inbox → any first mailbox.
+	 *
+	 * JMAP requires every Email object to belong to at least one mailbox,
+	 * so this method always returns an ID unless the account has no mailboxes at all.
+	 *
+	 * @return string|WP_Error Mailbox ID or error.
+	 */
+	public function get_sent_or_fallback_mailbox_id() {
+		// Try preferred roles in order.
+		foreach ( array( 'sent', 'archive', 'inbox' ) as $role ) {
+			$result = $this->get_mailbox_id_by_role( $role );
+			if ( ! is_wp_error( $result ) ) {
+				return $result;
+			}
+		}
+
+		// Last resort: query for any mailbox (no role filter).
+		$responses = $this->request( array(
+			array(
+				'Mailbox/query',
+				array( 'accountId' => $this->account_id, 'limit' => 1 ),
+				'0',
+			),
+		) );
+
+		if ( ! is_wp_error( $responses ) && ! empty( $responses[0][1]['ids'][0] ) ) {
+			return $responses[0][1]['ids'][0];
+		}
+
+		return new WP_Error(
+			'postwave_no_mailbox',
+			__( 'No JMAP mailbox found on this account. Please check your server configuration.', 'postwave' )
+		);
+	}
+
+	/**
 	 * Fetch all sending identities from the JMAP server, with caching.
 	 *
 	 * @return array|WP_Error Array of identity objects or WP_Error.

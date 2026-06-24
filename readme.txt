@@ -3,7 +3,7 @@ Contributors: tahhan
 Tags: email, mail, jmap, smtp, transactional-email
 Requires at least: 5.8
 Tested up to: 6.7
-Stable tag: 1.3.2
+Stable tag: 1.3.3
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -113,6 +113,9 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 
 == Changelog ==
 
+= 1.3.3 =
+* Fixed: "Message has to belong to at least one mailbox" — the plugin now resolves a fallback mailbox when the server has no Sent folder with role "sent". It tries sent → archive → inbox → first available mailbox before giving up.
+
 = 1.3.2 =
 * Fixed: "No JMAP mailbox found with role sent" — the Sent mailbox is now optional; emails send successfully even when the server has no Sent folder with that role
 * Fixed: Mail log Details panel now pops up as an overlay instead of wrapping inside the narrow table column
@@ -160,6 +163,9 @@ Go to **Postwave JMAP -> Connection** and click "Test connection". The plugin wi
 * Live connection testing (AJAX)
 
 == Upgrade Notice ==
+
+= 1.3.3 =
+Critical fix: emails failed with "Message has to belong to at least one mailbox". The plugin now finds a fallback mailbox automatically.
 
 = 1.3.2 =
 Critical fix: emails were blocked when the JMAP server had no Sent mailbox with role "sent". Update immediately.
