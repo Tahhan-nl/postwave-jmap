@@ -3,7 +3,7 @@
   <rect width="1200" height="32" fill="#1d2327"/>
   <rect x="0" y="32" width="160" height="718" fill="#1d2327"/>
   <rect x="0" y="164" width="3" height="32" fill="#6366f1"/>
-  <text x="16" y="185" font-size="13" fill="#72aee6" font-weight="600">Postwave JMAP</text>
+  <text x="16" y="185" font-size="13" fill="#72aee6" font-weight="600">Tahhan JMAP Mailer</text>
   <text x="16" y="56" font-size="13" fill="#f0f0f1" font-weight="600">Dashboard</text>
   <text x="16" y="92" font-size="13" fill="#a7aaad">Posts</text>
   <text x="16" y="120" font-size="13" fill="#a7aaad">Plugins</text>
@@ -15,7 +15,7 @@
   <rect x="186" y="56" width="16" height="8" rx="2" fill="white" opacity="0.9"/>
   <path d="M186 58 L194 61 L202 58" stroke="#818cf8" stroke-width="1.2" fill="none"/>
   <path d="M188 52 Q192 47 196 52" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-  <text x="216" y="58" font-size="15" font-weight="700" fill="#1d2327">Postwave JMAP</text>
+  <text x="216" y="58" font-size="15" font-weight="700" fill="#1d2327">Tahhan JMAP Mailer</text>
   <text x="216" y="73" font-size="11" fill="#646970">JMAP Mail for WordPress</text>
   <rect x="1090" y="50" width="82" height="22" rx="11" fill="#edfaef" stroke="#b8e6c1" stroke-width="1"/>
   <circle cx="1103" cy="61" r="4" fill="#00a32a"/>

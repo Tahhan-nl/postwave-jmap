@@ -2,13 +2,13 @@
   <rect width="1200" height="750" fill="#f0f0f1"/>
   <rect width="1200" height="32" fill="#1d2327"/>
   <rect x="0" y="32" width="160" height="718" fill="#1d2327"/>
-  <text x="16" y="185" font-size="13" fill="#72aee6" font-weight="600">Postwave JMAP</text>
+  <text x="16" y="185" font-size="13" fill="#72aee6" font-weight="600">Tahhan JMAP Mailer</text>
 
   <!-- Header -->
   <rect x="160" y="32" width="1040" height="52" fill="white"/>
   <rect x="160" y="84" width="1040" height="1" fill="#dcdcde"/>
   <rect x="180" y="44" width="28" height="28" rx="6" fill="#6366f1"/>
-  <text x="216" y="64" font-size="15" font-weight="700" fill="#1d2327">Postwave JMAP</text>
+  <text x="216" y="64" font-size="15" font-weight="700" fill="#1d2327">Tahhan JMAP Mailer</text>
   <rect x="1090" y="50" width="82" height="22" rx="11" fill="#edfaef" stroke="#b8e6c1" stroke-width="1"/>
   <circle cx="1103" cy="61" r="4" fill="#00a32a"/>
   <text x="1112" y="65" font-size="12" font-weight="600" fill="#00a32a">Active</text>

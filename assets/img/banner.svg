@@ -44,7 +44,7 @@
   </g>
 
   <!-- Plugin name -->
-  <text x="244" y="244" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="82" font-weight="700" fill="white" letter-spacing="-2">Postwave</text>
+  <text x="244" y="244" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="82" font-weight="700" fill="white" letter-spacing="-2">Tahhan JMAP Mailer</text>
   <text x="246" y="316" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="44" font-weight="400" fill="#a5b4fc" letter-spacing="6">JMAP</text>
 
   <!-- Tagline -->

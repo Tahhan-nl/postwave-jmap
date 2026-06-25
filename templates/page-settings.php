@@ -41,8 +41,8 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
       <div class="pw-wizard__logo">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" width="28" height="28"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       </div>
-      <h1 class="pw-wizard__title"><?php esc_html_e( 'Welcome to Postwave', 'tahhan-jmap-mailer' ); ?></h1>
-      <p class="pw-wizard__sub"><?php esc_html_e( 'Modern email for WordPress', 'tahhan-jmap-mailer' ); ?></p>
+      <h1 class="pw-wizard__title"><?php esc_html_e( 'Welcome to Tahhan JMAP Mailer', 'tahhan-jmap-mailer' ); ?></h1>
+      <p class="pw-wizard__sub"><?php esc_html_e( 'JMAP Mail for WordPress', 'tahhan-jmap-mailer' ); ?></p>
       <div class="pw-wizard__steps">
         <div class="pw-wizard__step-dot pw-wizard__step-dot--active"></div>
         <div class="pw-wizard__step-dot"></div>

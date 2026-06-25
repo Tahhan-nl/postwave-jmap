@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Tahhan-nl/postwave-jmap/main/assets/img/banner-1544x500.png" alt="Tahhan JMAP Mailer Banner" width="100%">
+<img src="https://raw.githubusercontent.com/Tahhan-nl/tahhan-jmap-mailer/main/assets/img/banner-1544x500.png" alt="Tahhan JMAP Mailer Banner" width="100%">
 
 # Tahhan JMAP Mailer
 
@@ -14,7 +14,7 @@ Tahhan JMAP Mailer replaces WordPress's built-in mailer with the modern [JMAP pr
 [![WordPress](https://img.shields.io/badge/WordPress-5.8%2B-blue?logo=wordpress&logoColor=white)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-777BB4?logo=php&logoColor=white)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%202.0-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.3.0-6366f1)](https://github.com/Tahhan-nl/postwave-jmap/releases)
+[![Version](https://img.shields.io/badge/Version-1.3.0-6366f1)](https://github.com/Tahhan-nl/tahhan-jmap-mailer/releases)
 [![Tested up to](https://img.shields.io/badge/Tested%20up%20to-WP%206.7-success)](https://wordpress.org/)
 
 </div>
@@ -66,7 +66,7 @@ Most WordPress sites send email through SMTP — a protocol designed in 1982. It
 ## Installation
 
 ### From WordPress Admin (recommended)
-1. Download the [latest release](https://github.com/Tahhan-nl/postwave-jmap/releases) ZIP
+1. Download the [latest release](https://github.com/Tahhan-nl/tahhan-jmap-mailer/releases) ZIP
 2. Go to **Plugins → Add New → Upload Plugin**
 3. Upload the ZIP and click **Install Now**
 4. Click **Activate**
@@ -78,7 +78,7 @@ Most WordPress sites send email through SMTP — a protocol designed in 1982. It
 
 ### Via WP-CLI
 ```bash
-wp plugin install https://github.com/Tahhan-nl/postwave-jmap/releases/latest/download/postwave.zip --activate
+wp plugin install https://github.com/Tahhan-nl/tahhan-jmap-mailer/releases/latest/download/tahhan-jmap-mailer.zip --activate
 ```
 
 ---
@@ -261,7 +261,7 @@ Please follow [WordPress Coding Standards](https://developer.wordpress.org/codin
 
 ## Security
 
-Found a vulnerability? Please report it privately via [GitHub Security Advisories](https://github.com/Tahhan-nl/postwave-jmap/security/advisories/new) — do **not** open a public issue.
+Found a vulnerability? Please report it privately via [GitHub Security Advisories](https://github.com/Tahhan-nl/tahhan-jmap-mailer/security/advisories/new) — do **not** open a public issue.
 
 ---
 
