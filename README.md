@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/Tahhan-nl/tahhan-jmap-mailer/main/assets/img/banner-1544x500.png" alt="Tahhan JMAP Mailer Banner" width="100%">
+<img src="https://raw.githubusercontent.com/Tahhan-nl/tahhan-jmap-mailer/main/assets/img/banner.svg" alt="Tahhan JMAP Mailer Banner" width="100%">
 
 # Tahhan JMAP Mailer
 
