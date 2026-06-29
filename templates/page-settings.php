@@ -230,7 +230,7 @@ $icon_check      = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" heig
          class="pw-nav-item<?php echo $is_active ? ' pw-nav-item-active' : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>">
         <?php echo $meta['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
         <span><?php echo esc_html( $meta['label'] ); ?></span>
-        <?php echo esc_html( $count ); ?>
+        <?php echo $count; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- count built with intval() ?>
       </a>
       <?php endforeach; ?>
     </div>
